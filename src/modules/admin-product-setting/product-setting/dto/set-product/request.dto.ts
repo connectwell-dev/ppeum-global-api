@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsArray, IsBoolean, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { EmptyToCustomValue } from '@common/decorators/empty-to-custom-value';
-import { ActiveTarget, ProductType, Language } from '@prisma/client';
+import { Language } from '@prisma/client';
 
 export class SetProductTranslationDto {
   @ApiProperty({ description: '언어', example: 'ko', enum: Language })
@@ -27,6 +27,11 @@ export class SetProductTranslationDto {
   @IsString()
   @EmptyToCustomValue()
   imageCode?: string;
+
+  @ApiProperty({ description: '해당 언어권 노출 여부', example: true, required: false })
+  @IsOptional()
+  @IsBoolean()
+  isView?: boolean;
 }
 
 export class SetProductReqDto {
@@ -35,71 +40,27 @@ export class SetProductReqDto {
   @IsNumber()
   productCategoryId: number;
 
-  @ApiProperty({ description: '상품 타입', example: ProductType.single, enum: ProductType })
-  @IsEnum(ProductType)
-  @IsNotEmpty()
-  productType: ProductType;
-
   @ApiProperty({ description: '상품 금액', example: 100000 })
   @IsNumber()
   @IsNotEmpty()
   productPrice: number;
 
-  @ApiProperty({ description: '상품 비고', example: '상품 비고', required: false })
+  @ApiProperty({ description: '노출 시작일', example: '2026-01-01', required: false })
   @IsOptional()
   @IsString()
-  productNote?: string;
+  @EmptyToCustomValue()
+  startDate?: string;
 
-  @ApiProperty({ description: '노출 대상', example: [ActiveTarget.crm], enum: ActiveTarget, isArray: true })
-  @IsArray()
-  @IsEnum(ActiveTarget, { each: true })
-  activeTarget: ActiveTarget[];
-
-
-  @ApiProperty({ description: '과세 여부', example: true })
-  @IsBoolean()
-  @IsNotEmpty()
-  isTaxIncluded: boolean;
-
-  @ApiProperty({ description: 'VAT 표시 여부', example: true })
-  @IsBoolean()
-  @IsNotEmpty()
-  isVatView: boolean;
-
-  @ApiProperty({ description: '수면 포함 여부', example: false })
-  @IsBoolean()
-  @IsNotEmpty()
-  isSleep: boolean;
-
-  @ApiProperty({ description: '노출 여부', example: true })
-  @IsBoolean()
-  @IsNotEmpty()
-  isDisplay: boolean;
+  @ApiProperty({ description: '노출 종료일', example: '2026-12-31', required: false })
+  @IsOptional()
+  @IsString()
+  @EmptyToCustomValue()
+  endDate?: string;
 
   @ApiProperty({ description: '사용 여부', example: true })
   @IsBoolean()
   @IsNotEmpty()
   isActive: boolean;
-
-  @ApiProperty({ description: '멤버십 기간 (일)', example: 30, required: false })
-  @IsOptional()
-  @IsNumber()
-  membershipPeriod?: number;
-
-  @ApiProperty({ description: '멤버십 선불금액', example: 100000, required: false })
-  @IsOptional()
-  @IsNumber()
-  membershipPrepayment?: number;
-
-  @ApiProperty({ description: '멤버십 추가 선불금액', example: 50000, required: false })
-  @IsOptional()
-  @IsNumber()
-  membershipAddPrepayment?: number;
-
-  @ApiProperty({ description: '적용 멤버십 시작 등급 ID', example: 1, required: false })
-  @IsOptional()
-  @IsNumber()
-  membershipStartGradeId?: number;
 
   @ApiProperty({ description: '연결 시술설명 ID (OperationInfo)', example: 1, required: false })
   @IsOptional()

@@ -3,7 +3,6 @@ import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from 'class-validat
 import { Transform } from 'class-transformer';
 import { PaginationReqDto } from '@common/dto/pagination.dto';
 import { Language } from '@prisma/client';
-import { ActiveTarget, ProductType } from '@prisma/client';
 
 export class GetProductListReqDto extends PaginationReqDto {
   @ApiProperty({ description: '상품 분류 ID', example: 1, required: false })
@@ -11,16 +10,6 @@ export class GetProductListReqDto extends PaginationReqDto {
   @Transform(({ value }) => Number(value))
   @IsNumber()
   productCategoryId?: number;
-
-  @ApiProperty({ description: '상품 타입', example: ProductType.single, required: false, enum: ProductType })
-  @IsOptional()
-  @IsEnum(ProductType)
-  productType?: ProductType;
-
-  @ApiProperty({ description: '노출 대상', example: ActiveTarget.crm, required: false, enum: ActiveTarget })
-  @IsOptional()
-  @IsEnum(ActiveTarget)
-  activeTarget?: ActiveTarget;
 
   @ApiProperty({ description: '상품명 검색', example: '상품명', required: false })
   @IsOptional()

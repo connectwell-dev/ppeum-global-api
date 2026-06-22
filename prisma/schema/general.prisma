@@ -7,7 +7,7 @@ enum GeneralImageType {
 // 다국어 설정 (기준/공용/사용 언어)
 model GeneralInfo {
   id              Int      @id @default(autoincrement())
-  useLanguage     Json     @default("{\"ja\": false, \"ko\": false, \"en\": false, \"zhCn\": false, \"zhTw\": false, \"vi\": false, \"th\": false, \"ru\": false}") @map("use_language") // 사용 언어
+  useLanguage     Json     @default("{\"ja\": false, \"ko\": false, \"en\": false, \"zhCN\": false, \"zhTW\": false, \"vi\": false, \"th\": false, \"ru\": false}") @map("use_language") // 사용 언어
   defaultLanguage String   @map("default_language") @db.VarChar(10) // 기준 언어
   publicLanguage  String   @map("public_language") @db.VarChar(10) // 공용 언어
   createdAt       DateTime @default(now()) @map("created_at") // 생성일시

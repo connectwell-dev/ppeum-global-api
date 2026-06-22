@@ -24,6 +24,10 @@ export class PutProductReqDto extends OmitType(SetProductReqDto, ['productTransl
   @EmptyToCustomValue()
   imageCode?: string;
 
+  @ApiProperty({ description: '해당 언어권 노출 여부 (기준언어)', example: true, required: false })
+  @IsOptional()
+  @IsBoolean()
+  isView?: boolean;
 
   @ApiProperty({ description: '단순 변경 여부 (true: changedKeys 갱신 안함)', example: false })
   @IsBoolean()
@@ -51,6 +55,11 @@ export class PutProductTranslationReqDto {
   @IsOptional()
   @IsString()
   imageCode?: string;
+
+  @ApiProperty({ description: '해당 언어권 노출 여부', example: true, required: false })
+  @IsOptional()
+  @IsBoolean()
+  isView?: boolean;
 }
 
 export class PutProductPublicTranslationReqDto extends PutProductTranslationReqDto {

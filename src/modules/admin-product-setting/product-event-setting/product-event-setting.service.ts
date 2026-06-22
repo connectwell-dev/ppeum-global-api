@@ -622,7 +622,6 @@ export class ProductEventSettingService {
         const name = pickTranslation(link.product?.productTranslations ?? [], 'name', headerLang, defaultLang)
         const categoryName = pickTranslation(link.product?.productCategory?.productCategoryTranslations ?? [], 'name', headerLang, defaultLang)
         const price = link.product?.productPrice ?? 0;
-        const isTaxIncluded = link.product?.isTaxIncluded ?? true;
 
         return {
           productId: link.productId,
@@ -631,9 +630,7 @@ export class ProductEventSettingService {
           order: link.order,
           name,
           categoryName,
-          productType: link.product?.productType,
           productPrice: price,
-          isTaxIncluded,
         };
       });
     } catch (error) {

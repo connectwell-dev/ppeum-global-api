@@ -12,7 +12,11 @@ export const LANGUAGE_CODE_LABEL_KO: Record<Language, string> = {
   [Language.ru]: '러시아어',
 };
 
-/** `general_info.useLanguage` JSON 키 → Prisma `Language` 문자열 코드 */
+/**
+ * `general_info.useLanguage` JSON 키 → Prisma `Language` 문자열 코드.
+ * JSON 키는 Prisma `Language`와 동일하게 통일(zhCN/zhTW)했으나,
+ * 구버전 데이터(zhCn/zhTw)도 호환되도록 함께 매핑한다.
+ */
 export const USE_LANGUAGE_JSON_KEY_TO_PRISMA_CODE: Record<string, string> = {
   ja: 'ja',
   ko: 'ko',
@@ -26,13 +30,13 @@ export const USE_LANGUAGE_JSON_KEY_TO_PRISMA_CODE: Record<string, string> = {
   ru: 'ru',
 };
 
-/** Prisma `Language` → `general_info.useLanguage` JSON 키 (ja, zhCn …) */
+/** Prisma `Language` → `general_info.useLanguage` JSON 키 (JSON 키와 동일) */
 export const LANGUAGE_TO_USE_LANGUAGE_JSON_KEY: Record<Language, string> = {
   [Language.ja]: 'ja',
   [Language.ko]: 'ko',
   [Language.en]: 'en',
-  [Language.zhCN]: 'zhCn',
-  [Language.zhTW]: 'zhTw',
+  [Language.zhCN]: 'zhCN',
+  [Language.zhTW]: 'zhTW',
   [Language.th]: 'th',
   [Language.vi]: 'vi',
   [Language.ru]: 'ru',
@@ -41,7 +45,7 @@ export const LANGUAGE_TO_USE_LANGUAGE_JSON_KEY: Record<Language, string> = {
 const LANGUAGE_VALUE_SET = new Set<string>(Object.values(Language) as string[]);
 
 /**
- * DTO 등 API 문자열(ja, zhCn, zhCN …)을 Prisma Language로 변환. 실패 시 null.
+ * DTO 등 API 문자열(ja, zhCN, zhCn …)을 Prisma Language로 변환. 실패 시 null.
  */
 export function parseUseLanguageParamToLanguage(raw: string): Language | null {
   const t = typeof raw === 'string' ? raw.trim() : '';
@@ -80,9 +84,9 @@ const prismaLanguageSortRank = (code: string): number => {
 
 /**
  * `general_info.useLanguage` JSON에서 `true`인 항목만,
- * JSON 키(ja, zhCn …) → 한글 표시명 Record (정렬: {@link PRISMA_LANGUAGE_SORT_ORDER})
+ * JSON 키(ja, zhCN …) → 한글 표시명 Record (정렬: {@link PRISMA_LANGUAGE_SORT_ORDER})
  *
- * @example { ja: true, en: true, zhCn: true, ko: false } → { ja: '일본어', en: '영어', zhCn: '중국어(간체)' }
+ * @example { ja: true, en: true, zhCN: true, ko: false } → { ja: '일본어', en: '영어', zhCN: '중국어(간체)' }
  */
 export function buildEnabledUseLanguageLabelsKo(raw: unknown): Record<string, string> {
   if (raw === null || raw === undefined || typeof raw !== 'object' || Array.isArray(raw)) {
