@@ -1,0 +1,42 @@
+enum BannerType {
+  visual // 상세 배너
+  main // 메인 배너
+  side // 사이드 배너
+}
+
+model Banner {
+  id          Int        @id @default(autoincrement())
+  useLanguage Json       @default("{\"ja\": false, \"ko\": false, \"en\": false, \"zhCn\": false, \"zhTw\": false, \"vi\": false, \"th\": false, \"ru\": false}") @map("use_language") // 사용 언어
+  type        BannerType @map("type") // 배너 타입
+  title       String?    @map("title") @db.VarChar(300) // 상단 타이틀
+  isHipass    Boolean    @default(false) @map("is_hipass") // hipass 버튼
+  isSunday    Boolean    @default(false) @map("is_sunday") // 일요일 진료 여부
+  isTreatment Boolean    @default(false) @map("is_treatment") // 진료구분
+  startAt     String?    @map("start_at") // 시작일
+  startTime   String?    @map("start_time") // 시작시간
+  endAt       String?    @map("end_at") // 종료일
+  endTime     String?    @map("end_time") // 종료시간
+  link        String?    @map("link") @db.VarChar(300) // 링크
+  isNewTab    Boolean    @default(false) @map("is_new_tab") // 새창열기 여부
+  createdAt   DateTime   @default(now()) @map("created_at") // 생성일시
+  updatedAt   DateTime   @default(now()) @updatedAt @map("updated_at") // 수정일시
+  deletedAt   DateTime?  @map("deleted_at") // 삭제일시
+
+  images BannerImage[]
+
+  @@map("banner")
+}
+
+model BannerImage {
+  id        Int       @id @default(autoincrement())
+  bannerId  Int       @map("banner_id")
+  order     Int       @default(1) @map("order")
+  path      String    @db.VarChar(255) // 이미지 path
+  createdAt DateTime  @default(now()) @map("created_at") // 생성일시
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") // 수정일시
+  deletedAt DateTime? @map("deleted_at") // 삭제일시
+
+  banner Banner @relation(fields: [bannerId], references: [id], onDelete: Cascade)
+
+  @@map("banner_image")
+}
