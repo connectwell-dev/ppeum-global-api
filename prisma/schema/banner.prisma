@@ -6,7 +6,7 @@ enum BannerType {
 
 model Banner {
   id          Int        @id @default(autoincrement())
-  useLanguage Json       @default("{\"ja\": false, \"ko\": false, \"en\": false, \"zhCN\": false, \"zhTW\": false, \"vi\": false, \"th\": false, \"ru\": false}") @map("use_language") // 사용 언어
+  language    Language   @map("language") // 언어
   type        BannerType @map("type") // 배너 타입
   title       String?    @map("title") @db.VarChar(300) // 상단 타이틀
   isHipass    Boolean    @default(false) @map("is_hipass") // hipass 버튼

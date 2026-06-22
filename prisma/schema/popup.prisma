@@ -1,13 +1,13 @@
 model PopupBasic {
-  id          Int       @id @default(autoincrement())
-  useLanguage Json      @default("{\"ja\": false, \"ko\": false, \"en\": false, \"zhCN\": false, \"zhTW\": false, \"vi\": false, \"th\": false, \"ru\": false}") @map("use_language") // 사용 언어
-  startAt     String    @map("start_at") // 시작일
-  startTime   String    @map("start_time") // 시작시간
-  endAt       String    @map("end_at") // 종료일
-  endTime     String    @map("end_time") // 종료시간
-  createdAt   DateTime  @default(now()) @map("created_at") // 생성일시
-  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") // 수정일시
-  deletedAt   DateTime? @map("deleted_at") // 삭제일시
+  id        Int       @id @default(autoincrement())
+  language  Language  @map("language") // 언어
+  startAt   String    @map("start_at") // 시작일
+  startTime String    @map("start_time") // 시작시간
+  endAt     String    @map("end_at") // 종료일
+  endTime   String    @map("end_time") // 종료시간
+  createdAt DateTime  @default(now()) @map("created_at") // 생성일시
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") // 수정일시
+  deletedAt DateTime? @map("deleted_at") // 삭제일시
 
   images PopupBasicImage[]
 
@@ -15,11 +15,11 @@ model PopupBasic {
 }
 
 model PopupMain {
-  id          Int       @id @default(autoincrement())
-  useLanguage Json      @default("{\"ja\": false, \"ko\": false, \"en\": false, \"zhCN\": false, \"zhTW\": false, \"vi\": false, \"th\": false, \"ru\": false}") @map("use_language") // 사용 언어
-  createdAt   DateTime  @default(now()) @map("created_at") // 생성일시
-  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") // 수정일시
-  deletedAt   DateTime? @map("deleted_at") // 삭제일시
+  id        Int       @id @default(autoincrement())
+  language  Language  @map("language") // 언어
+  createdAt DateTime  @default(now()) @map("created_at") // 생성일시
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") // 수정일시
+  deletedAt DateTime? @map("deleted_at") // 삭제일시
 
   images PopupMainImage[]
 
