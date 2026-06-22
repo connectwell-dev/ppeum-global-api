@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Language, ProductEventType, ProductType, WeekDayType } from '@prisma/client';
+import { Language, ProductEventType, WeekDayType } from '@prisma/client';
 
 export class EventImageResDto {
   @ApiProperty({ example: 'IMG_xxxxxxxx' })

@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@src/core/prisma/prisma.service';
 import { CustomException } from '@common/exceptions';
 import { Language } from '@prisma/client';
-import { ProductType } from '@prisma/client';
 import { SettingService } from '@src/core/setting/setting.service';
 import { changedKeyFind, changeWordFind, notMatchKeyFind, ChangedKey } from '@common/utils/changed-key-find';
 import { PaginatedResponseDto } from '@common/dto/pagination.dto';
@@ -41,7 +40,7 @@ export class ProductSettingService {
 
   async getProductList(dto: GetProductListReqDto, headerLang: Language): Promise<PaginatedResponseDto<GetProductListResDto>> {
     try {
-      const { productCategoryId, productType, activeTarget, name, notInputLanguage, isActive, code } = dto;
+      const { productCategoryId, name, notInputLanguage, isActive, code } = dto;
       const page = dto.page ?? 1;
       const rowCount = dto.rowCount ?? 10;
       const sort = dto.sort ?? 'createdAt';
@@ -60,8 +59,6 @@ export class ProductSettingService {
 
       const where: any = {
         deletedAt: null,
-        ...(productType && { productType }),
-        ...(activeTarget && { activeTarget: { has: activeTarget } }),
         ...(isActive !== undefined && { isActive }),
         ...(code && { id: { contains: code } }),
         ...notInputFilter,
@@ -154,12 +151,10 @@ export class ProductSettingService {
           id: item.id,
           code: item.code,
           categoryName: categoryName,
-          productType: item.productType,
           name: pickTranslation(item.productTranslations ?? [], 'name', headerLang, defaultLang),
-          activeTarget: item.activeTarget,
           productPrice: item.productPrice,
-          isTaxIncluded: item.isTaxIncluded,
-          isVatView: item.isVatView,
+          startDate: item.startDate ?? null,
+          endDate: item.endDate ?? null,
           notInputLanguages,
           isActive: item.isActive,
           createdAt: item.createdAt,
@@ -180,7 +175,7 @@ export class ProductSettingService {
         where: { id, deletedAt: null },
         include: {
           productTranslations: {
-            select: { language: true, name: true, description: true, imageCode: true, isMatch: true, lastChangedAt: true, image: { select: { code: true, name: true, path: true } } },
+            select: { language: true, name: true, description: true, imageCode: true, isView: true, isMatch: true, lastChangedAt: true, image: { select: { code: true, name: true, path: true } } },
           },
           operationInfo: {
             include: {
@@ -218,19 +213,11 @@ export class ProductSettingService {
         productDescription: defaultTranslation?.description ?? '',
         productCategoryName: categoryName,
         productCategoryId: product.productCategoryId,
-        productType: product.productType,
         productPrice: product.productPrice,
-        productNote: product.productNote ?? '',
-        activeTarget: product.activeTarget,
-        isTaxIncluded: product.isTaxIncluded,
-        isVatView: product.isVatView,
-        isSleep: product.isSleep,
-        isDisplay: product.isDisplay,
+        startDate: product.startDate ?? null,
+        endDate: product.endDate ?? null,
         isActive: product.isActive,
-        membershipPeriod: product.membershipPeriod,
-        membershipPrepayment: product.membershipPrepayment,
-        membershipAddPrepayment: product.membershipAddPrepayment,
-        membershipStartGradeId: product.membershipStartGradeId,
+        isView: defaultTranslation?.isView ?? true,
         operationInfoId: product.operationInfoId ?? null,
         operationInfoTitle,
         image: image ?? null,
@@ -287,7 +274,7 @@ export class ProductSettingService {
         select: {
           changedKeys: true,
           productTranslations: {
-            select: { language: true, name: true, description: true, imageCode: true, isMatch: true, lastChangedAt: true, image: { select: { code: true, name: true, path: true } } },
+            select: { language: true, name: true, description: true, imageCode: true, isView: true, isMatch: true, lastChangedAt: true, image: { select: { code: true, name: true, path: true } } },
           },
         },
       });
@@ -333,6 +320,7 @@ export class ProductSettingService {
         name: targetTranslation?.name ?? '',
         description: targetTranslation?.description ?? '',
         image: targetTranslation?.image ?? null,
+        isView: targetTranslation?.isView ?? true,
         originName: originName ?? '',
         originDescription: originDescription ?? '',
         originImage: originImage ?? null,
@@ -356,23 +344,12 @@ export class ProductSettingService {
         const created = await tx.product.create({
           data: {
             productCategoryId: dto.productCategoryId ?? null,
-            productType: dto.productType,
             productPrice: dto.productPrice,
-            productNote: dto.productNote || null,
-            activeTarget: dto.activeTarget,
-            isTaxIncluded: dto.isTaxIncluded,
-            isVatView: dto.isVatView,
-            isSleep: (dto.productType === ProductType.goods || dto.productType === ProductType.membership) ? false : dto.isSleep,
-            isDisplay: dto.isDisplay,
+            startDate: dto.startDate || null,
+            endDate: dto.endDate || null,
             isActive: dto.isActive,
             operationInfoId: dto.operationInfoId ?? null,
             changedKeys: [],
-            ...(dto.productType === ProductType.membership && {
-              membershipPeriod: dto.membershipPeriod ?? null,
-              membershipPrepayment: dto.membershipPrepayment ?? null,
-              membershipAddPrepayment: dto.membershipAddPrepayment ?? null,
-              membershipStartGradeId: dto.membershipStartGradeId ?? null,
-            }),
           },
         });
 
@@ -384,7 +361,7 @@ export class ProductSettingService {
               this.findKeys,
             );
             await tx.productTranslation.create({
-              data: { productId: created.id, language: transData.language, name: transData.name || null, description: transData.description || null, imageCode: transData.imageCode || null, isMatch: (notMatchKeys.length === 0), lastChangedAt: new Date() },
+              data: { productId: created.id, language: transData.language, name: transData.name || null, description: transData.description || null, imageCode: transData.imageCode || null, isView: transData.isView ?? true, isMatch: (notMatchKeys.length === 0), lastChangedAt: new Date() },
             });
           }
         }
@@ -429,19 +406,10 @@ export class ProductSettingService {
           where: { id },
           data: {
             productCategoryId: dto.productCategoryId ?? null,
-            productType: dto.productType,
             productPrice: dto.productPrice,
-            productNote: dto.productNote ?? null,
-            activeTarget: dto.activeTarget,
-            isTaxIncluded: dto.isTaxIncluded,
-            isVatView: dto.isVatView,
-            isSleep: dto.isSleep,
-            isDisplay: dto.isDisplay,
+            startDate: dto.startDate || null,
+            endDate: dto.endDate || null,
             isActive: dto.isActive,
-            membershipPeriod: dto.membershipPeriod ?? null,
-            membershipPrepayment: dto.membershipPrepayment ?? null,
-            membershipAddPrepayment: dto.membershipAddPrepayment ?? null,
-            membershipStartGradeId: dto.membershipStartGradeId ?? null,
             operationInfoId: dto.operationInfoId ?? null,
             changedKeys: dbProduct.changedKeys || [],
           },
@@ -457,17 +425,20 @@ export class ProductSettingService {
         const nameChanged = dto.name !== originName;
         const descChanged = (dto.description ?? '') !== originDesc;
         const imageCodeChanged = (dto.imageCode || '') !== originImageCode;
-        const translationUpdate: any = (nameChanged || descChanged || imageCodeChanged) ? {
-          ...(nameChanged ? { name: dto.name } : {}),
-          ...(descChanged ? { description: dto.description || null } : {}),
-          ...(imageCodeChanged ? { imageCode: dto.imageCode || null } : {}),
-          isMatch: true,
-          lastChangedAt: new Date(),
-        } : {};
+        const translationUpdate: any = {
+          ...((nameChanged || descChanged || imageCodeChanged) ? {
+            ...(nameChanged ? { name: dto.name } : {}),
+            ...(descChanged ? { description: dto.description || null } : {}),
+            ...(imageCodeChanged ? { imageCode: dto.imageCode || null } : {}),
+            isMatch: true,
+            lastChangedAt: new Date(),
+          } : {}),
+          isView: dto.isView ?? true,
+        };
         await tx.productTranslation.upsert({
           where: { productId_language: { productId: id, language: defaultLang } },
           update: translationUpdate,
-          create: { productId: id, language: defaultLang, name: dto.name, description: dto.description ?? null, imageCode: dto.imageCode || null, isMatch: true, lastChangedAt: new Date() },
+          create: { productId: id, language: defaultLang, name: dto.name, description: dto.description ?? null, imageCode: dto.imageCode || null, isView: dto.isView ?? true, isMatch: true, lastChangedAt: new Date() },
         });
 
         const ohterUpdate: any = {}
@@ -602,8 +573,8 @@ export class ProductSettingService {
         }
         await tx.productTranslation.upsert({
           where: { productId_language: { productId: id, language: publicLang } },
-          update: { name, description: description ?? null, imageCode: dto.imageCode || null, isMatch: true, lastChangedAt: new Date() },
-          create: { productId: id, language: publicLang, name, description: description ?? null, imageCode: dto.imageCode || null, isMatch: true, lastChangedAt: new Date() },
+          update: { name, description: description ?? null, imageCode: dto.imageCode || null, isView: dto.isView ?? true, isMatch: true, lastChangedAt: new Date() },
+          create: { productId: id, language: publicLang, name, description: description ?? null, imageCode: dto.imageCode || null, isView: dto.isView ?? true, isMatch: true, lastChangedAt: new Date() },
         });
       });
       return 'update product translation success';
@@ -635,8 +606,8 @@ export class ProductSettingService {
       await this.prisma.$transaction(async (tx) => {
         await tx.productTranslation.upsert({
           where: { productId_language: { productId: id, language: language as Language } },
-          update: { name, description: description || null, imageCode: dto.imageCode || null, isMatch: true, lastChangedAt: new Date() },
-          create: { productId: id, language: language as Language, name, description: description ?? null, imageCode: dto.imageCode || null, isMatch: true, lastChangedAt: new Date() },
+          update: { name, description: description || null, imageCode: dto.imageCode || null, isView: dto.isView ?? true, isMatch: true, lastChangedAt: new Date() },
+          create: { productId: id, language: language as Language, name, description: description ?? null, imageCode: dto.imageCode || null, isView: dto.isView ?? true, isMatch: true, lastChangedAt: new Date() },
         });
         await tx.product.update({ where: { id }, data: { changedKeys: restChangedFields } });
       });

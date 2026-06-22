@@ -219,7 +219,7 @@ export const GENERAL_ERROR_MESSAGE = {
     en: 'Invalid use language setting.',
   },
 
-  // useLanguage 개별 필드 (ja, ko, en, zhCn, zhTw, vi, th, ru)
+  // useLanguage 개별 필드 (ja, ko, en, zhCN, zhTW, vi, th, ru)
   'general.useLanguage.ja.invalid': {
     ko: '일본어 사용 여부는 true 또는 false여야 합니다.',
     ja: '日本語使用可否はtrueまたはfalseである必要があります。',
@@ -241,14 +241,14 @@ export const GENERAL_ERROR_MESSAGE = {
     zhTW: '英語使用狀態必須為true或false。',
     en: 'English use status must be true or false.',
   },
-  'general.useLanguage.zhCn.invalid': {
+  'general.useLanguage.zhCN.invalid': {
     ko: '중국어(간체) 사용 여부는 true 또는 false여야 합니다.',
     ja: '中国語(簡体)使用可否はtrueまたはfalseである必要があります。',
     zhCN: '简体中文使用状态必须为true或false。',
     zhTW: '簡體中文使用狀態必須為true或false。',
     en: 'Simplified Chinese use status must be true or false.',
   },
-  'general.useLanguage.zhTw.invalid': {
+  'general.useLanguage.zhTW.invalid': {
     ko: '중국어(번체) 사용 여부는 true 또는 false여야 합니다.',
     ja: '中国語(繁体)使用可否はtrueまたはfalseである必要があります。',
     zhCN: '繁体中文使用状态必须为true或false。',

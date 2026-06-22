@@ -5,7 +5,7 @@ enum PolicyType {
 
 model Policy {
   id          Int        @id @default(autoincrement())
-  useLanguage Json       @default("{\"ja\": false, \"ko\": false, \"en\": false, \"zhCn\": false, \"zhTw\": false, \"vi\": false, \"th\": false, \"ru\": false}") @map("use_language") // 사용 언어
+  useLanguage Json       @default("{\"ja\": false, \"ko\": false, \"en\": false, \"zhCN\": false, \"zhTW\": false, \"vi\": false, \"th\": false, \"ru\": false}") @map("use_language") // 사용 언어
   type        PolicyType @map("policy_type") // 약관 타입
   note        String     @map("note") @db.Text() // 내용
   createdAt   DateTime   @default(now()) @map("created_at") // 생성일시
