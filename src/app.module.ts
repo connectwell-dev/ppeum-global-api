@@ -12,6 +12,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { AdminGeneralSettingModule } from './modules/admin-general-setting/admin-general-setting.module';
 import { AdminProductSettingModule } from './modules/admin-product-setting/admin-product-setting.module';
 import { AdminOperationSettingModule } from './modules/admin-operation-setting/admin-operation-setting.module';
+import { AdminPolicySettingModule } from './modules/admin-policy-setting/admin-policy-setting.module';
 
 const nodeEnv = process.env.NODE_ENV || 'development';
 const envFilePath = `.env.${nodeEnv}`;
@@ -32,6 +33,7 @@ const envFilePath = `.env.${nodeEnv}`;
     AdminGeneralSettingModule,
     AdminProductSettingModule,
     AdminOperationSettingModule,
+    AdminPolicySettingModule
   ],
   providers: [
     { provide: APP_FILTER, useClass: GlobalExceptionFilter },
