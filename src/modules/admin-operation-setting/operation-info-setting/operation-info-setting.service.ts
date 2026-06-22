@@ -215,12 +215,13 @@ export class OperationInfoSettingService {
   // ───────────────────────────────────────────────
   // 등록
   // ───────────────────────────────────────────────
+
   async setOperationInfo(dto: SetOperationInfoReqDto): Promise<CommonSetResponseDto> {
     try {
       const defaultLang = this.settingService.getDefaultLanguage();
       const publicLang = this.settingService.getPublicLanguage();
       const siteUseLanguages = this.settingService.getSiteUseLanguages();
-      const otherLanguageData: { language: Language; data: SetOperationInfoDefaultTranslationDto }[] = [publicLang, ...siteUseLanguages].map((language) => ({ language: language as Language, data: (dto[language]) ? JSON.parse(JSON.stringify(dto[language] ?? undefined)) : null }));
+      const otherLanguageData: { language: Language; data: SetOperationInfoDefaultTranslationDto }[] = [publicLang, ...siteUseLanguages].filter((language) => language !== defaultLang).map((language) => ({ language: language as Language, data: (dto[language]) ? JSON.parse(JSON.stringify(dto[language] ?? undefined)) : null }));
       const defaultLanguageData: SetOperationInfoDefaultTranslationDto = (dto[defaultLang]) ? JSON.parse(JSON.stringify(dto[defaultLang] ?? undefined)) : null;
       let notMatchKeys: { key: string, message: string }[] = [];
       let validateObj: { [key: string]: any } = {};

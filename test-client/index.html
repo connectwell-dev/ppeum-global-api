@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PPEUM Global API · 테스트 클라이언트</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --panel: #171a21;
+      --panel-2: #1e222b;
+      --border: #2a2f3a;
+      --text: #e6e9ef;
+      --muted: #9aa3b2;
+      --accent: #5b8cff;
+      --get: #3fb950;
+      --post: #d29922;
+      --put: #58a6ff;
+      --patch: #a371f7;
+      --delete: #f85149;
+      --radius: 10px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      align-items: flex-end;
+    }
+
+    header h1 {
+      font-size: 16px;
+      margin: 0;
+      align-self: center;
+      white-space: nowrap;
+    }
+
+    header h1 small { color: var(--muted); font-weight: 400; font-size: 12px; display: block; }
+
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+
+    input, select, textarea, button { font-family: inherit; font-size: 13px; }
+
+    input, select, textarea {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 7px;
+      padding: 7px 9px;
+      outline: none;
+    }
+
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+
+    textarea { resize: vertical; min-height: 90px; width: 100%; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; line-height: 1.45; }
+
+    .grow { flex: 1; min-width: 180px; }
+
+    button {
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--text);
+      border-radius: 7px;
+      padding: 7px 12px;
+      transition: filter .1s;
+    }
+    button:hover { filter: brightness(1.2); }
+
+    button.send { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+    button.ghost { background: transparent; }
+
+    .layout { display: grid; grid-template-columns: 220px 1fr 460px; align-items: start; }
+    @media (max-width: 1200px) { .layout { grid-template-columns: 1fr; } }
+
+    nav {
+      position: sticky;
+      top: 70px;
+      align-self: start;
+      padding: 16px 10px;
+      max-height: calc(100vh - 70px);
+      overflow: auto;
+    }
+    @media (max-width: 1200px) { nav { display: none; } }
+
+    nav a { display: block; color: var(--muted); text-decoration: none; padding: 6px 10px; border-radius: 6px; font-size: 13px; }
+    nav a:hover { background: var(--panel-2); color: var(--text); }
+
+    main { padding: 18px; min-width: 0; }
+
+    .group { margin-bottom: 28px; }
+    .group > h2 { font-size: 14px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; margin: 0 0 12px; }
+
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 12px; }
+    .card-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .method { font-weight: 700; font-size: 11px; padding: 3px 8px; border-radius: 5px; min-width: 56px; text-align: center; color: #0b0d11; }
+    .m-GET { background: var(--get); }
+    .m-POST { background: var(--post); }
+    .m-PUT { background: var(--put); }
+    .m-PATCH { background: var(--patch); }
+    .m-DELETE { background: var(--delete); color: #fff; }
+    .path { font-family: ui-monospace, monospace; font-size: 12.5px; color: var(--text); }
+    .title { color: var(--muted); font-size: 12.5px; margin-left: auto; }
+    .card-body { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
+    .mini { display: flex; flex-direction: column; gap: 3px; }
+    .mini label { font-size: 11px; color: var(--muted); }
+    .mini input { width: 160px; }
+    .hint { font-size: 11px; color: var(--muted); }
+
+    aside {
+      position: sticky;
+      top: 70px;
+      align-self: start;
+      height: calc(100vh - 70px);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      background: var(--panel);
+    }
+    @media (max-width: 1200px) { aside { position: static; height: auto; border-left: none; border-top: 1px solid var(--border); } }
+
+    .resp-head { padding: 10px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+    .status { font-weight: 700; padding: 2px 8px; border-radius: 5px; font-size: 12px; }
+    .ok { background: rgba(63,185,80,.18); color: var(--get); }
+    .fail { background: rgba(248,81,73,.18); color: var(--delete); }
+    .resp-meta { font-family: ui-monospace, monospace; font-size: 11.5px; color: var(--muted); word-break: break-all; }
+    .resp-body { flex: 1; overflow: auto; margin: 0; padding: 12px 14px; font-family: ui-monospace, monospace; font-size: 12px; white-space: pre-wrap; word-break: break-word; }
+    .badge { font-size: 11px; color: var(--muted); }
+    .tokenbar { font-size: 11px; }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>PPEUM Global API<small>테스트 클라이언트</small></h1>
+    <div class="field grow">
+      <label>Base URL</label>
+      <input id="baseUrl" value="http://localhost:3000" />
+    </div>
+    <div class="field">
+      <label>headerLang (lang 헤더)</label>
+      <select id="lang">
+        <option value="">(없음)</option>
+        <option value="ja" selected>ja · 일본어(기준)</option>
+        <option value="ko">ko · 한국어(공용)</option>
+        <option value="zhCN">zhCN · 중국어 간체</option>
+        <option value="zhTW">zhTW · 중국어 번체</option>
+        <option value="en">en · 영어</option>
+        <option value="th">th · 태국어</option>
+        <option value="vi">vi · 베트남어</option>
+        <option value="ru">ru · 러시아어</option>
+      </select>
+    </div>
+    <div class="field grow">
+      <label>Access Token (Authorization: Bearer)</label>
+      <input id="accessToken" placeholder="로그인 시 자동 입력" />
+    </div>
+    <div class="field grow">
+      <label>Refresh Token (x-refresh-token)</label>
+      <input id="refreshToken" placeholder="로그인 시 자동 입력" />
+    </div>
+    <button class="ghost" id="clearTokens">토큰 비우기</button>
+  </header>
+
+  <div class="layout">
+    <nav id="nav"></nav>
+    <main id="main"></main>
+    <aside>
+      <div class="resp-head">
+        <span id="status" class="status">대기</span>
+        <span id="respMeta" class="resp-meta">요청을 보내면 여기에 응답이 표시됩니다.</span>
+      </div>
+      <pre class="resp-body" id="respBody"></pre>
+    </aside>
+  </div>
+
+  <script>
+    // ───────────────────────────────────────────────
+    // 엔드포인트 정의
+    // ───────────────────────────────────────────────
+    const groups = [
+      {
+        name: '인증 · 어드민', endpoints: [
+          { m: 'POST', p: '/api/v1/auth/admin/login', t: '어드민 로그인', body: { id: 'superadmin', password: 'password123' }, auth: 'login' },
+          { m: 'POST', p: '/api/v1/auth/admin/refresh', t: '액세스 토큰 갱신', refresh: true, auth: 'refresh' },
+          { m: 'POST', p: '/api/v1/auth/admin/logout', t: '로그아웃', refresh: true },
+          { m: 'GET', p: '/api/v1/auth/admin/permissions', t: '내 권한 목록' },
+          { m: 'GET', p: '/api/v1/auth/admin/me', t: '내 정보 조회' },
+        ]
+      },
+      {
+        name: '인증 · 유저', endpoints: [
+          { m: 'POST', p: '/api/v1/auth/user/login', t: '유저 로그인', body: { id: 'superadmin', password: 'password123' }, auth: 'login' },
+          { m: 'POST', p: '/api/v1/auth/user/refresh', t: '액세스 토큰 갱신', refresh: true, auth: 'refresh' },
+          { m: 'POST', p: '/api/v1/auth/user/logout', t: '로그아웃', refresh: true },
+          { m: 'GET', p: '/api/v1/auth/user/permissions', t: '내 권한 목록' },
+          { m: 'GET', p: '/api/v1/auth/user/me', t: '내 정보 조회' },
+        ]
+      },
+      {
+        name: '이미지', endpoints: [
+          { m: 'GET', p: '/api/v1/general/image-category/list', t: '이미지 분류 목록' },
+          { m: 'GET', p: '/api/v1/general/image/list', t: '이미지 목록', query: 'page=1&rowCount=10' },
+          { m: 'GET', p: '/api/v1/general/image/:code', t: '이미지 상세', params: ['code'] },
+          { m: 'POST', p: '/api/v1/general/image', t: '이미지 등록 (multipart)', multipart: true, fields: [{ k: 'imageCategoryId', v: '1' }, { k: 'name', v: '상품 메인 이미지' }] },
+          { m: 'PUT', p: '/api/v1/general/image/:code', t: '이미지 수정 (multipart)', params: ['code'], multipart: true, fields: [{ k: 'imageCategoryId', v: '1' }, { k: 'name', v: '수정된 이미지명' }] },
+          { m: 'DELETE', p: '/api/v1/general/image/:code', t: '이미지 삭제', params: ['code'] },
+        ]
+      },
+      {
+        name: '상품', endpoints: [
+          { m: 'GET', p: '/api/v1/product/list', t: '상품 목록', query: 'page=1&rowCount=10' },
+          { m: 'GET', p: '/api/v1/product/:id', t: '상품 상세', params: ['id'] },
+          { m: 'GET', p: '/api/v1/product/:id/translation', t: '상품 번역 조회', params: ['id'], query: 'language=ko' },
+          { m: 'GET', p: '/api/v1/product/:id/product-event-list', t: '연결된 이벤트 목록', params: ['id'] },
+          {
+            m: 'POST', p: '/api/v1/product', t: '상품 등록', body: {
+              productCategoryId: 1, productType: 'single', productPrice: 100000,
+              activeTarget: ['crm'], isTaxIncluded: true, isVatView: true, isSleep: false,
+              isDisplay: true, isActive: true, operationInfoId: 1, menuBoardCategoryIds: [],
+              productTranslations: [{ language: 'ja', name: '商品名', description: '商品の説明' }]
+            }
+          },
+          {
+            m: 'PUT', p: '/api/v1/product/:id', t: '상품 수정 (기준언어)', params: ['id'], body: {
+              productCategoryId: 1, productType: 'single', productPrice: 120000,
+              activeTarget: ['crm'], isTaxIncluded: true, isVatView: true, isSleep: false,
+              isDisplay: true, isActive: true, operationInfoId: 1, menuBoardCategoryIds: [],
+              name: '商品名(修正)', description: '修正説明', isSimpleChange: false
+            }
+          },
+          { m: 'PUT', p: '/api/v1/product/:id/public-translation', t: '상품 공용언어(ko) 번역', params: ['id'], body: { language: 'ko', name: '상품명', description: '상품 설명', isSimpleChange: false } },
+          { m: 'PUT', p: '/api/v1/product/:id/translation', t: '상품 기타언어 번역', params: ['id'], body: { language: 'en', name: 'Product Name', description: 'Description' } },
+          { m: 'DELETE', p: '/api/v1/product/:id', t: '상품 삭제', params: ['id'] },
+        ]
+      },
+      {
+        name: '상품 분류', endpoints: [
+          { m: 'GET', p: '/api/v1/product-category/m/list', t: '대분류 목록' },
+          { m: 'GET', p: '/api/v1/product-category/m/:id', t: '대분류 상세', params: ['id'] },
+          { m: 'POST', p: '/api/v1/product-category/m', t: '대분류 추가', body: { isActive: true, translations: [{ language: 'ja', name: '大分類名' }, { language: 'ko', name: '대분류명' }] } },
+          { m: 'PUT', p: '/api/v1/product-category/m/:id', t: '대분류 수정', params: ['id'], body: { isActive: true, translations: [{ language: 'ja', name: '大分類名(修正)' }] } },
+          { m: 'DELETE', p: '/api/v1/product-category/m/:id', t: '대분류 삭제', params: ['id'] },
+          { m: 'GET', p: '/api/v1/product-category/s/list/:parentId', t: '중분류 목록', params: ['parentId'] },
+          { m: 'GET', p: '/api/v1/product-category/s/:id', t: '중분류 상세', params: ['id'] },
+          { m: 'GET', p: '/api/v1/product-category/s/:id/product-list', t: '중분류 연결 상품 목록', params: ['id'] },
+          { m: 'POST', p: '/api/v1/product-category/s', t: '중분류 추가', body: { parentId: 1, isActive: true, translations: [{ language: 'ja', name: '中分類名' }] } },
+          { m: 'PUT', p: '/api/v1/product-category/s/:id', t: '중분류 수정', params: ['id'], body: { parentId: 1, isActive: true, translations: [{ language: 'ja', name: '中分類名(修正)' }] } },
+          { m: 'DELETE', p: '/api/v1/product-category/s/:id', t: '중분류 삭제', params: ['id'] },
+          { m: 'PATCH', p: '/api/v1/product-category/status', t: '분류 순서/사용여부 일괄', body: { mainItems: [{ id: 1, order: 1, isActive: true }], subItems: [] } },
+        ]
+      },
+      {
+        name: '이벤트', endpoints: [
+          { m: 'GET', p: '/api/v1/product-event/list', t: '이벤트 목록', query: 'page=1&rowCount=10' },
+          { m: 'GET', p: '/api/v1/product-event/:id', t: '이벤트 상세', params: ['id'] },
+          { m: 'GET', p: '/api/v1/product-event/:id/translation', t: '이벤트 번역 조회', params: ['id'], query: 'language=ko' },
+          {
+            m: 'POST', p: '/api/v1/product-event', t: '이벤트 등록', body: {
+              label: 'NEW', colorBg: 'FFFFFF', colorLine: '333333', colorText: '333333',
+              eventType: 'general', startDate: null, endDate: null, weekDay: [], isActive: true,
+              eventTranslations: [{ language: 'ja', name: 'イベント名' }]
+            }
+          },
+          {
+            m: 'PUT', p: '/api/v1/product-event/:id', t: '이벤트 수정 (기준언어)', params: ['id'], body: {
+              label: 'NEW', colorBg: 'FFFFFF', colorLine: '333333', colorText: '333333',
+              eventType: 'general', startDate: null, endDate: null, weekDay: [], isActive: true,
+              name: 'イベント名(修正)', isSimpleChange: false
+            }
+          },
+          { m: 'PUT', p: '/api/v1/product-event/:id/public-translation', t: '이벤트 공용언어 번역', params: ['id'], body: { language: 'ko', name: '이벤트명', isSimpleChange: false } },
+          { m: 'PUT', p: '/api/v1/product-event/:id/translation', t: '이벤트 기타언어 번역', params: ['id'], body: { language: 'en', name: 'Event Name' } },
+          { m: 'DELETE', p: '/api/v1/product-event/:id', t: '이벤트 삭제', params: ['id'] },
+          { m: 'PATCH', p: '/api/v1/product-event/:id/toggle', t: '이벤트 사용여부', params: ['id'], body: { isActive: false } },
+          { m: 'PATCH', p: '/api/v1/product-event/order', t: '이벤트 순서 변경', body: { items: [{ id: 1, order: 1 }] } },
+          { m: 'GET', p: '/api/v1/product-event/:id/products', t: '이벤트 상품 목록', params: ['id'] },
+          { m: 'POST', p: '/api/v1/product-event/:id/products', t: '이벤트 상품 추가', params: ['id'], body: { products: [{ productId: 1, eventPrice: 90000 }] } },
+          { m: 'PUT', p: '/api/v1/product-event/:id/products', t: '이벤트 상품 일괄 수정', params: ['id'], body: { products: [{ productId: 1, eventPrice: 80000, eventDiscountPercent: 10.5, order: 1 }] } },
+          { m: 'DELETE', p: '/api/v1/product-event/:id/products', t: '이벤트 상품 삭제', params: ['id'], body: { productIds: [1] } },
+        ]
+      },
+      {
+        name: '메뉴판', endpoints: [
+          { m: 'GET', p: '/api/v1/product-menu-board/list', t: '메뉴판 분류별 상품 목록', query: 'productCategoryId=1' },
+          { m: 'PATCH', p: '/api/v1/product-menu-board/status', t: '메뉴판 노출 순위 변경', body: { productCategoryId: 1, items: [{ productId: 1, order: 1 }] } },
+        ]
+      },
+      {
+        name: '시술 설명', endpoints: [
+          { m: 'GET', p: '/api/v1/operation-info/list', t: '시술 설명 목록', query: 'page=1&rowCount=10' },
+          { m: 'GET', p: '/api/v1/operation-info/:id', t: '시술 설명 상세', params: ['id'], query: 'language=ja' },
+          { m: 'GET', p: '/api/v1/operation-info/:id/operation-list', t: '연결된 상품 목록', params: ['id'] },
+          {
+            m: 'POST', p: '/api/v1/operation-info', t: '시술 설명 등록', body: {
+              ja: {
+                title: 'リップフィラー', description: 'リップフィラーの説明です。',
+                shortDescription: [
+                  { key: '麻酔時間', value: '約30分' }, { key: '手術時間', value: '約1時間' },
+                  { key: '回復期間', value: '約1週間' }, { key: '持続期間', value: '約6ヶ月' },
+                  { key: '再手術周期', value: '約1年' }
+                ],
+                imageCode: null, hashtag: ['フィラー'], caution: ['施術後2〜3時間は洗顔しないでください。'], note: '英語校正必要'
+              }
+            }
+          },
+          {
+            m: 'PUT', p: '/api/v1/operation-info/:id', t: '시술 설명 수정 (기준언어)', params: ['id'], body: {
+              title: 'リップフィラー(修正)', description: '修正された説明。',
+              shortDescription: [
+                { key: '麻酔時間', value: '約30分' }, { key: '手術時間', value: '約1時間' },
+                { key: '回復期間', value: '約1週間' }, { key: '持続期間', value: '約6ヶ月' },
+                { key: '再手術周期', value: '約1年' }
+              ],
+              imageCode: null, hashtag: ['フィラー'], caution: ['注意事項'], note: 'メモ', isSimpleChange: false
+            }
+          },
+          {
+            m: 'PUT', p: '/api/v1/operation-info/:id/public-translation', t: '시술 설명 공용언어(ko) 번역', params: ['id'], body: {
+              title: '립 필러', description: '립 필러 설명입니다.',
+              shortDescription: [
+                { key: '마취시간', value: '약 30분' }, { key: '시술시간', value: '약 1시간' },
+                { key: '회복기간', value: '약 1주일' }, { key: '유지시간', value: '약 6개월' },
+                { key: '재시술주기', value: '약 1년' }
+              ],
+              imageCode: null, hashtag: ['필러'], caution: ['시술 후 2~3시간 세안 금지'], note: '', isSimpleChange: false
+            }
+          },
+          {
+            m: 'PUT', p: '/api/v1/operation-info/:id/translation', t: '시술 설명 기타언어 번역', params: ['id'], body: {
+              language: 'en', title: 'Lip Filler', description: 'Lip filler description.',
+              shortDescription: [
+                { key: 'Anesthesia time', value: '~30min' }, { key: 'Surgery time', value: '~1h' },
+                { key: 'Recovery period', value: '~1week' }, { key: 'Duration', value: '~6months' },
+                { key: 'Reoperation cycle', value: '~1year' }
+              ],
+              imageCode: null, hashtag: ['filler'], caution: ['Do not wash face for 2~3 hours.'], note: ''
+            }
+          },
+          { m: 'DELETE', p: '/api/v1/operation-info/:id', t: '시술 설명 삭제', params: ['id'] },
+        ]
+      },
+    ];
+
+    // ───────────────────────────────────────────────
+    // 상태 저장 (localStorage)
+    // ───────────────────────────────────────────────
+    const $ = (id) => document.getElementById(id);
+    const els = { base: $('baseUrl'), lang: $('lang'), at: $('accessToken'), rt: $('refreshToken') };
+    const store = {
+      load() {
+        if (localStorage.base) els.base.value = localStorage.base;
+        if (localStorage.lang) els.lang.value = localStorage.lang;
+        if (localStorage.at) els.at.value = localStorage.at;
+        if (localStorage.rt) els.rt.value = localStorage.rt;
+      },
+      save() {
+        localStorage.base = els.base.value;
+        localStorage.lang = els.lang.value;
+        localStorage.at = els.at.value;
+        localStorage.rt = els.rt.value;
+      }
+    };
+    store.load();
+    [els.base, els.lang, els.at, els.rt].forEach((e) => e.addEventListener('change', store.save));
+    $('clearTokens').addEventListener('click', () => { els.at.value = ''; els.rt.value = ''; store.save(); });
+
+    // ───────────────────────────────────────────────
+    // 렌더링
+    // ───────────────────────────────────────────────
+    const slug = (s) => s.replace(/[^a-zA-Z0-9]+/g, '-');
+    const nav = $('nav');
+    const main = $('main');
+
+    groups.forEach((g) => {
+      const navA = document.createElement('a');
+      navA.href = '#' + slug(g.name);
+      navA.textContent = g.name;
+      nav.appendChild(navA);
+
+      const section = document.createElement('section');
+      section.className = 'group';
+      section.id = slug(g.name);
+      section.innerHTML = `<h2>${g.name}</h2>`;
+
+      g.endpoints.forEach((ep) => section.appendChild(renderCard(ep)));
+      main.appendChild(section);
+    });
+
+    function renderCard(ep) {
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      const head = document.createElement('div');
+      head.className = 'card-head';
+      head.innerHTML = `
+        <span class="method m-${ep.m}">${ep.m}</span>
+        <span class="path">${ep.p}</span>
+        <span class="title">${ep.t || ''}</span>`;
+      card.appendChild(head);
+
+      const bodyWrap = document.createElement('div');
+      bodyWrap.className = 'card-body';
+
+      // path params
+      if (ep.params && ep.params.length) {
+        const row = document.createElement('div');
+        row.className = 'row';
+        ep.params.forEach((p) => {
+          const mini = document.createElement('div');
+          mini.className = 'mini';
+          mini.innerHTML = `<label>:${p}</label>`;
+          const inp = document.createElement('input');
+          inp.dataset.param = p;
+          inp.placeholder = p;
+          mini.appendChild(inp);
+          row.appendChild(mini);
+        });
+        bodyWrap.appendChild(row);
+      }
+
+      // query
+      if (ep.query !== undefined) {
+        const mini = document.createElement('div');
+        mini.className = 'mini';
+        mini.style.flex = '1';
+        mini.innerHTML = `<label>query string</label>`;
+        const inp = document.createElement('input');
+        inp.className = 'query-input';
+        inp.style.width = '100%';
+        inp.value = ep.query || '';
+        inp.placeholder = 'key=value&key2=value2';
+        mini.appendChild(inp);
+        bodyWrap.appendChild(mini);
+      }
+
+      // multipart fields
+      if (ep.multipart) {
+        const row = document.createElement('div');
+        row.className = 'row';
+        const fileMini = document.createElement('div');
+        fileMini.className = 'mini';
+        fileMini.innerHTML = `<label>file</label>`;
+        const fileInp = document.createElement('input');
+        fileInp.type = 'file';
+        fileInp.className = 'file-input';
+        fileMini.appendChild(fileInp);
+        row.appendChild(fileMini);
+        (ep.fields || []).forEach((f) => {
+          const mini = document.createElement('div');
+          mini.className = 'mini';
+          mini.innerHTML = `<label>${f.k}</label>`;
+          const inp = document.createElement('input');
+          inp.dataset.field = f.k;
+          inp.value = f.v ?? '';
+          mini.appendChild(inp);
+          row.appendChild(mini);
+        });
+        bodyWrap.appendChild(row);
+        const hint = document.createElement('div');
+        hint.className = 'hint';
+        hint.textContent = 'PUT 수정 시 파일 미선택이면 기존 이미지 유지';
+        bodyWrap.appendChild(hint);
+      }
+
+      // json body
+      if (ep.body !== undefined) {
+        const ta = document.createElement('textarea');
+        ta.className = 'body-input';
+        ta.spellcheck = false;
+        ta.value = JSON.stringify(ep.body, null, 2);
+        bodyWrap.appendChild(ta);
+      }
+
+      // send
+      const row = document.createElement('div');
+      row.className = 'row';
+      const btn = document.createElement('button');
+      btn.className = 'send';
+      btn.textContent = 'Send';
+      btn.addEventListener('click', () => send(ep, card, btn));
+      row.appendChild(btn);
+      if (ep.refresh) {
+        const b = document.createElement('span');
+        b.className = 'badge';
+        b.textContent = 'x-refresh-token 헤더 자동 첨부';
+        row.appendChild(b);
+      }
+      bodyWrap.appendChild(row);
+
+      card.appendChild(bodyWrap);
+      return card;
+    }
+
+    // ───────────────────────────────────────────────
+    // 요청 전송
+    // ───────────────────────────────────────────────
+    async function send(ep, card, btn) {
+      const base = els.base.value.trim().replace(/\/$/, '');
+      let path = ep.p;
+      (ep.params || []).forEach((p) => {
+        const v = card.querySelector(`[data-param="${p}"]`).value.trim();
+        path = path.replace(`:${p}`, encodeURIComponent(v));
+      });
+      let qs = '';
+      const qEl = card.querySelector('.query-input');
+      if (qEl && qEl.value.trim()) qs = '?' + qEl.value.trim().replace(/^\?/, '');
+      const url = base + path + qs;
+
+      const headers = {};
+      if (els.lang.value) headers['lang'] = els.lang.value;
+      if (els.at.value.trim()) headers['Authorization'] = 'Bearer ' + els.at.value.trim();
+      if (ep.refresh && els.rt.value.trim()) headers['x-refresh-token'] = els.rt.value.trim();
+
+      let body;
+      if (ep.multipart) {
+        body = new FormData();
+        const fileEl = card.querySelector('.file-input');
+        if (fileEl && fileEl.files[0]) body.append('file', fileEl.files[0]);
+        card.querySelectorAll('[data-field]').forEach((el) => {
+          if (el.value !== '') body.append(el.dataset.field, el.value);
+        });
+      } else {
+        const taEl = card.querySelector('.body-input');
+        if (taEl && taEl.value.trim()) {
+          try {
+            JSON.parse(taEl.value);
+          } catch (e) {
+            return showResp(0, 'JSON 파싱 오류', ep.m + ' ' + url, e.message);
+          }
+          headers['Content-Type'] = 'application/json';
+          body = taEl.value;
+        }
+      }
+
+      btn.disabled = true;
+      const t0 = performance.now();
+      try {
+        const res = await fetch(url, { method: ep.m, headers, body });
+        const ms = Math.round(performance.now() - t0);
+        const text = await res.text();
+        let json;
+        try { json = JSON.parse(text); } catch { json = text; }
+        showResp(res.status, res.statusText, `${ep.m} ${url} · ${ms}ms`, json);
+
+        // 로그인/리프레시 토큰 자동 저장
+        if (res.ok && json && json.data) {
+          if (ep.auth === 'login' && json.data.accessToken) {
+            els.at.value = json.data.accessToken;
+            els.rt.value = json.data.refreshToken || '';
+            store.save();
+          } else if (ep.auth === 'refresh' && typeof json.data === 'string') {
+            els.at.value = json.data;
+            store.save();
+          }
+        }
+      } catch (e) {
+        showResp(0, 'Network Error', `${ep.m} ${url}`, e.message + '\n\n· 서버 실행 여부 / Base URL / CORS 를 확인하세요.');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function showResp(status, statusText, meta, payload) {
+      const st = $('status');
+      const ok = status >= 200 && status < 300;
+      st.textContent = status ? `${status} ${statusText}` : statusText;
+      st.className = 'status ' + (ok ? 'ok' : 'fail');
+      $('respMeta').textContent = meta;
+      $('respBody').textContent = typeof payload === 'string' ? payload : JSON.stringify(payload, null, 2);
+    }
+  </script>
+</body>
+
+</html>

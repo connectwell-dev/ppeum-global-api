@@ -14,29 +14,21 @@ enum ProductType {
 
 enum ProductEventType {
   general // 일반
-  first // 첫 방문
-  once // 1회 체험가
-  weekday // 요일별
+  promotion // 프로모션
 }
 
-// 상품 카테고리
+// 상품 카테고리 (단일 뎁스)
 model ProductCategory {
   id        Int       @id @default(autoincrement())
   isActive  Boolean   @default(true) @map("is_active") // 활성화 여부
   order     Int       @default(0) // 노출 순서
-  depth     Int       @default(0) // 0: 대분류, 1: 중분류
-  parentId  Int?      @map("parent_id") // 부모 카테고리 id
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at") // 삭제일시
 
-  parent                      ProductCategory?             @relation("ProductCategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
-  children                    ProductCategory[]            @relation("ProductCategoryHierarchy")
   products                    Product[]                    @relation("ProductCategoryRelation")
-  menuBoardProducts           ProductToProductCategory[]
   productCategoryTranslations ProductCategoryTranslation[]
 
-  @@index([parentId])
   @@index([order])
   @@index([isActive])
   @@map("product_category")
@@ -85,7 +77,6 @@ model Product {
   productCategory            ProductCategory?           @relation("ProductCategoryRelation", fields: [productCategoryId], references: [id], onDelete: SetNull)
   operationInfo             OperationInfo?             @relation(fields: [operationInfoId], references: [id], onDelete: SetNull)
   productToProductEvents     ProductToProductEvent[]
-  menuBoardProducts          ProductToProductCategory[]
 
   @@index([productCategoryId])
   @@index([operationInfoId])
@@ -111,35 +102,21 @@ model ProductTranslation {
   @@map("product_translation")
 }
 
-model ProductToProductCategory {
-  productId         Int @map("product_id")
-  productCategoryId Int @map("product_category_id")
-  order             Int @default(0) // 노출 순서
-
-  product         Product?         @relation(fields: [productId], references: [id], onDelete: Cascade)
-  productCategory ProductCategory? @relation(fields: [productCategoryId], references: [id], onDelete: Cascade)
-
-  @@id([productId, productCategoryId])
-  @@map("product_to_product_category")
-}
-
 model ProductEvent {
   id          Int              @id @default(autoincrement())
   code        String           @unique @default(dbgenerated("generate_custom_id('EVT')")) @map("code") // 고유 id
-  isActive    Boolean          @default(true) @map("is_active") // 사용 여부
-  label       String           @db.VarChar(10) // 이벤트 라벨
-  colorBg     String           @map("color_bg") @db.VarChar(20) // 라벨 배경색 코드
-  colorLine   String           @map("color_line") @db.VarChar(20) // 라벨 선 색상 코드
-  colorText   String           @map("color_text") @db.VarChar(20) // 라벨 텍스트색 코드
-  eventType   ProductEventType @default(general) @map("event_type") // 이벤트 타입
-  startDate   String?          @map("start_date") @db.VarChar(20) // 시작일시
-  endDate     String?          @map("end_date") @db.VarChar(20) // 종료일시
-  weekDay     WeekDayType[]    @default([]) @map("week_day") // 요일 이벤트 시 요일별 설정
-  changedKeys Json[]           @default([]) @map("changed_keys") // 변경된 키 ( { key: 'name', changedAt : '2026-02-19 10:00:00' } )
-  order       Int              @default(0) @map("order") // 노출 순서
-  createdAt   DateTime         @default(now()) @map("created_at") // 생성일시
-  updatedAt   DateTime         @default(now()) @updatedAt @map("updated_at") // 수정일시
-  deletedAt   DateTime?        @map("deleted_at") // 삭제일시
+  isActive             Boolean          @default(true) @map("is_active") // 사용 여부
+  eventType            ProductEventType @default(general) @map("event_type") // 이벤트 타입
+  startDate            String?          @map("start_date") @db.VarChar(20) // 노출 시작일시
+  endDate              String?          @map("end_date") @db.VarChar(20) // 노출 종료일시 (null이면 상시)
+  reservationStartDate String?          @map("reservation_start_date") @db.VarChar(20) // 예약가능 시작일시
+  reservationEndDate   String?          @map("reservation_end_date") @db.VarChar(20) // 예약가능 종료일시 (null이면 상시)
+  weekDay              WeekDayType[]    @default([]) @map("week_day") // 요일 이벤트 시 요일별 설정
+  changedKeys          Json[]           @default([]) @map("changed_keys") // 변경된 키 ( { key: 'name', changedAt : '2026-02-19 10:00:00' } )
+  order                Int              @default(0) @map("order") // 노출 순서
+  createdAt            DateTime         @default(now()) @map("created_at") // 생성일시
+  updatedAt            DateTime         @default(now()) @updatedAt @map("updated_at") // 수정일시
+  deletedAt            DateTime?        @map("deleted_at") // 삭제일시
 
   productEventTranslations ProductEventTranslation[]
   productToProductEvents   ProductToProductEvent[] // 상품 이벤트 연결

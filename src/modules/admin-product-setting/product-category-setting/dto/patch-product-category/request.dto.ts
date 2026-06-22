@@ -20,17 +20,10 @@ export class PatchProductCategoryItemDto {
 }
 
 export class PatchProductCategoryStatusReqDto {
-  @ApiProperty({ description: '대분류 일괄 수정 목록', type: [PatchProductCategoryItemDto] })
+  @ApiProperty({ description: '분류 순서/사용여부 일괄 수정 목록', type: [PatchProductCategoryItemDto] })
   @IsArray()
   @IsNotEmpty()
   @ValidateNested({ each: true })
   @Type(() => PatchProductCategoryItemDto)
-  mainItems: PatchProductCategoryItemDto[];
-
-  @ApiProperty({ description: '현재 열린 중분류 일괄 수정 목록', type: [PatchProductCategoryItemDto] })
-  @IsArray()
-  @IsNotEmpty()
-  @ValidateNested({ each: true })
-  @Type(() => PatchProductCategoryItemDto)
-  subItems: PatchProductCategoryItemDto[];
+  items: PatchProductCategoryItemDto[];
 }

@@ -19,11 +19,8 @@ export class GetEventProductResDto {
   @ApiProperty({ description: '상품명', example: '상품명' })
   name: string;
 
-  @ApiProperty({ description: '상품 대분류명', example: '상품 대분류명' })
-  mainCategoryName: string;
-
-  @ApiProperty({ description: '상품 중분류명', example: '상품 중분류명' })
-  subCategoryName: string;
+  @ApiProperty({ description: '상품 분류명', example: '상품 분류명' })
+  categoryName: string;
 
   @ApiProperty({ description: '상품 타입', example: ProductType.single })
   productType: ProductType;

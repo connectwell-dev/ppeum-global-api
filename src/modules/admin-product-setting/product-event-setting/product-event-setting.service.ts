@@ -114,6 +114,8 @@ export class ProductEventSettingService {
           eventType: event.eventType,
           startDate: event.startDate,
           endDate: event.endDate,
+          reservationStartDate: event.reservationStartDate,
+          reservationEndDate: event.reservationEndDate,
           weekDay: event.weekDay,
           notInputLanguages,
           createdAt: event.createdAt,
@@ -152,13 +154,11 @@ export class ProductEventSettingService {
         name: defaultTranslation?.name ?? '',
         image: defaultTranslation?.image ?? null,
         isActive: event.isActive,
-        label: event.label,
-        colorBg: event.colorBg,
-        colorLine: event.colorLine,
-        colorText: event.colorText,
         eventType: event.eventType,
         startDate: event.startDate,
         endDate: event.endDate,
+        reservationStartDate: event.reservationStartDate,
+        reservationEndDate: event.reservationEndDate,
         weekDay: event.weekDay,
         createdAt: event.createdAt,
         updatedAt: event.updatedAt,
@@ -244,13 +244,11 @@ export class ProductEventSettingService {
         const nextOrder = await this.orderHelper.getNextOrder('productEvent', { deletedAt: null }, tx);
         const created = await tx.productEvent.create({
           data: {
-            label: dto.label,
-            colorBg: dto.colorBg,
-            colorLine: dto.colorLine,
-            colorText: dto.colorText,
             eventType: dto.eventType,
             startDate: dto.startDate ?? null,
             endDate: dto.endDate ?? null,
+            reservationStartDate: dto.reservationStartDate ?? null,
+            reservationEndDate: dto.reservationEndDate ?? null,
             weekDay: dto.weekDay ?? [],
             isActive: dto.isActive,
             order: nextOrder,
@@ -319,13 +317,11 @@ export class ProductEventSettingService {
         await tx.productEvent.update({
           where: { id },
           data: {
-            label: dto.label,
-            colorBg: dto.colorBg,
-            colorLine: dto.colorLine,
-            colorText: dto.colorText,
             eventType: dto.eventType,
             startDate: dto.startDate ?? null,
             endDate: dto.endDate ?? null,
+            reservationStartDate: dto.reservationStartDate ?? null,
+            reservationEndDate: dto.reservationEndDate ?? null,
             weekDay: dto.weekDay ?? [],
             isActive: dto.isActive,
             changedKeys: dbEvent.changedKeys || [],
@@ -614,14 +610,6 @@ export class ProductEventSettingService {
                     where: { language: { in: [headerLang, defaultLang] } },
                     select: { language: true, name: true },
                   },
-                  parent: {
-                    include: {
-                      productCategoryTranslations: {
-                        where: { language: { in: [headerLang, defaultLang] } },
-                        select: { language: true, name: true },
-                      },
-                    },
-                  },
                 },
               },
             },
@@ -632,8 +620,7 @@ export class ProductEventSettingService {
 
       return links.map((link) => {
         const name = pickTranslation(link.product?.productTranslations ?? [], 'name', headerLang, defaultLang)
-        const mainCategoryName = pickTranslation(link.product?.productCategory?.parent?.productCategoryTranslations ?? [], 'name', headerLang, defaultLang)
-        const subCategoryName = pickTranslation(link.product?.productCategory?.productCategoryTranslations ?? [], 'name', headerLang, defaultLang)
+        const categoryName = pickTranslation(link.product?.productCategory?.productCategoryTranslations ?? [], 'name', headerLang, defaultLang)
         const price = link.product?.productPrice ?? 0;
         const isTaxIncluded = link.product?.isTaxIncluded ?? true;
 
@@ -643,8 +630,7 @@ export class ProductEventSettingService {
           eventDiscountPercent: link.eventDiscountPercent,
           order: link.order,
           name,
-          mainCategoryName,
-          subCategoryName,
+          categoryName,
           productType: link.product?.productType,
           productPrice: price,
           isTaxIncluded,

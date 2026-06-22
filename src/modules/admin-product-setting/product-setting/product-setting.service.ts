@@ -41,7 +41,7 @@ export class ProductSettingService {
 
   async getProductList(dto: GetProductListReqDto, headerLang: Language): Promise<PaginatedResponseDto<GetProductListResDto>> {
     try {
-      const { productMainCategoryId, productSubCategoryId, productType, activeTarget, name, notInputLanguage, isActive, code } = dto;
+      const { productCategoryId, productType, activeTarget, name, notInputLanguage, isActive, code } = dto;
       const page = dto.page ?? 1;
       const rowCount = dto.rowCount ?? 10;
       const sort = dto.sort ?? 'createdAt';
@@ -66,16 +66,8 @@ export class ProductSettingService {
         ...(code && { id: { contains: code } }),
         ...notInputFilter,
       };
-      if (!productSubCategoryId && productMainCategoryId) {
-        where.productCategory = {
-          parent: {
-            id: productMainCategoryId,
-          },
-        };
-      } else if (productSubCategoryId) {
-        where.productCategory = {
-          id: productSubCategoryId,
-        };
+      if (productCategoryId) {
+        where.productCategoryId = productCategoryId;
       }
 
       const translateWhere = {
@@ -93,8 +85,6 @@ export class ProductSettingService {
         },
         productCategory: {
           select: {
-            depth: true,
-            parent: { select: { productCategoryTranslations: { where: { language: { in: [headerLang, this.settingService.getDefaultLanguage() as any] } }, select: { language: true, name: true } } } },
             productCategoryTranslations: { where: { language: { in: [headerLang, this.settingService.getDefaultLanguage() as any] } }, select: { language: true, name: true } },
           },
         },
@@ -103,7 +93,7 @@ export class ProductSettingService {
       let total: number;
       let data: any[];
 
-      if (sort === 'name' || sort === 'subCategoryName' || sort === 'mainCategoryName') {
+      if (sort === 'name' || sort === 'categoryName') {
         const allForSort = await this.prisma.product.findMany({
           where: { ...where, ...translationFilter },
           select: {
@@ -112,7 +102,6 @@ export class ProductSettingService {
             productCategory: {
               select: {
                 productCategoryTranslations: { where: { language: { in: [headerLang, this.settingService.getDefaultLanguage() as Language] } }, select: { name: true, language: true } },
-                parent: { select: { productCategoryTranslations: { where: { language: { in: [headerLang, this.settingService.getDefaultLanguage() as Language] } }, select: { name: true, language: true } } } },
               },
             },
           },
@@ -121,12 +110,12 @@ export class ProductSettingService {
         allForSort.sort((a, b) => {
           let valA = '';
           let valB = '';
-          if (sort === 'subCategoryName') {
+          if (sort === 'categoryName') {
             valA = pickTranslation(a.productCategory?.productCategoryTranslations ?? [], 'name', headerLang, headerLang) || '';
             valB = pickTranslation(b.productCategory?.productCategoryTranslations ?? [], 'name', headerLang, headerLang) || '';
-          } else if (sort === 'mainCategoryName') {
-            valA = pickTranslation(a.productCategory?.parent?.productCategoryTranslations ?? [], 'name', headerLang, headerLang) || '';
-            valB = pickTranslation(b.productCategory?.parent?.productCategoryTranslations ?? [], 'name', headerLang, headerLang) || '';
+          } else {
+            valA = pickTranslation(a.productTranslations ?? [], 'name', headerLang, headerLang) || '';
+            valB = pickTranslation(b.productTranslations ?? [], 'name', headerLang, headerLang) || '';
           }
           return order === 'asc' ? valA.localeCompare(valB, headerLang) : valB.localeCompare(valA, headerLang);
         });
@@ -159,14 +148,12 @@ export class ProductSettingService {
         }
 
 
-        const mainCategoryName = pickTranslation(item.productCategory?.parent?.productCategoryTranslations ?? [], 'name', headerLang, defaultLang)
-        const subCategoryName = pickTranslation(item.productCategory?.productCategoryTranslations ?? [], 'name', headerLang, defaultLang)
+        const categoryName = pickTranslation(item.productCategory?.productCategoryTranslations ?? [], 'name', headerLang, defaultLang)
 
         return {
           id: item.id,
           code: item.code,
-          mainCategoryName: mainCategoryName,
-          subCategoryName: subCategoryName,
+          categoryName: categoryName,
           productType: item.productType,
           name: pickTranslation(item.productTranslations ?? [], 'name', headerLang, defaultLang),
           activeTarget: item.activeTarget,
@@ -209,35 +196,7 @@ export class ProductSettingService {
                 where: { language: { in: [headerLang, this.settingService.getDefaultLanguage() as Language] } },
                 select: { language: true, name: true },
               },
-              parent: {
-                include: {
-                  productCategoryTranslations: {
-                    where: { language: { in: [headerLang, this.settingService.getDefaultLanguage() as Language] } },
-                    select: { language: true, name: true },
-                  },
-                },
-              },
             },
-          },
-          menuBoardProducts: {
-            include: {
-              productCategory: {
-                include: {
-                  productCategoryTranslations: {
-                    where: { language: { in: [headerLang, this.settingService.getDefaultLanguage() as Language] } },
-                    select: { language: true, name: true }
-                  },
-                  parent: {
-                    include: {
-                      productCategoryTranslations: {
-                        where: { language: { in: [headerLang, this.settingService.getDefaultLanguage() as Language] } },
-                        select: { language: true, name: true }
-                      }
-                    }
-                  },
-                },
-              }
-            }
           },
         },
       });
@@ -247,19 +206,8 @@ export class ProductSettingService {
       const defaultLang = this.settingService.getDefaultLanguage() as Language;
       const defaultTranslation = product.productTranslations.find((t) => t.language === defaultLang);
 
-      const subCategoryName = pickTranslation(product.productCategory?.productCategoryTranslations ?? [], 'name', headerLang, defaultLang)
-      const mainCategoryName = pickTranslation(product.productCategory?.parent?.productCategoryTranslations ?? [], 'name', headerLang, defaultLang)
+      const categoryName = pickTranslation(product.productCategory?.productCategoryTranslations ?? [], 'name', headerLang, defaultLang)
 
-      const menuBoardList = product.menuBoardProducts.map((m) => {
-        const subCategoryName = pickTranslation(m.productCategory?.productCategoryTranslations ?? [], 'name', headerLang, defaultLang)
-        const mainCategoryName = pickTranslation(m.productCategory?.parent?.productCategoryTranslations ?? [], 'name', headerLang, defaultLang)
-
-        return {
-          categoryId: m.productCategoryId,
-          mainCategoryName: mainCategoryName,
-          subCategoryName: subCategoryName,
-        }
-      });
       const image = pickTranslation(product.productTranslations ?? [], 'image', defaultLang, defaultLang)
       const operationInfoTitle = pickTranslation(product.operationInfo?.operationInfoTranslations ?? [], 'title', headerLang, defaultLang) ?? null;
 
@@ -268,8 +216,7 @@ export class ProductSettingService {
         code: product.code,
         productName: defaultTranslation?.name ?? '',
         productDescription: defaultTranslation?.description ?? '',
-        productMainCategoryName: mainCategoryName,
-        productSubCategoryName: subCategoryName,
+        productCategoryName: categoryName,
         productCategoryId: product.productCategoryId,
         productType: product.productType,
         productPrice: product.productPrice,
@@ -286,7 +233,6 @@ export class ProductSettingService {
         membershipStartGradeId: product.membershipStartGradeId,
         operationInfoId: product.operationInfoId ?? null,
         operationInfoTitle,
-        menuBoardList,
         image: image ?? null,
         createdAt: product.createdAt,
         updatedAt: product.updatedAt,
@@ -443,20 +389,6 @@ export class ProductSettingService {
           }
         }
 
-        for (const categoryId of dto.menuBoardCategoryIds ?? []) {
-          try {
-            const lastOrder = await tx.productToProductCategory.findFirst({
-              where: { productCategoryId: categoryId },
-              orderBy: { order: 'desc' },
-              select: { order: true },
-            });
-            await tx.productToProductCategory.create({
-              data: { productId: created.id, productCategoryId: categoryId, order: lastOrder ? lastOrder.order + 1 : 1 },
-            });
-          } catch (error) {
-            throw new CustomException('product.menu_category.not_found', 'BAD_REQUEST');
-          }
-        }
         return created;
       });
 
@@ -554,18 +486,6 @@ export class ProductSettingService {
         });
         const newChangedKeys = dbProduct.changedKeys.filter((k: ChangedKey) => new Date(k.changedAt) > new Date(minLastChangedAt?.lastChangedAt ?? 0));
         await tx.product.update({ where: { id }, data: { changedKeys: newChangedKeys } });
-
-        await tx.productToProductCategory.deleteMany({ where: { productId: id } });
-        for (const categoryId of dto.menuBoardCategoryIds ?? []) {
-          const lastOrder = await tx.productToProductCategory.findFirst({
-            where: { productCategoryId: categoryId },
-            orderBy: { order: 'desc' },
-            select: { order: true },
-          });
-          await tx.productToProductCategory.create({
-            data: { productId: id, productCategoryId: categoryId, order: lastOrder ? lastOrder.order + 1 : 1 },
-          });
-        }
       });
 
       return 'update product success';
@@ -732,14 +652,9 @@ export class ProductSettingService {
       const productEventList = await this.prisma.productEvent.findMany({ where: { productToProductEvents: { some: { productId: id } } } });
       if (productEventList.length > 0) throw new CustomException('common.not_deleted_condition', 'NOT_DELETED_CONDITION');
       await this.prisma.$transaction(async (tx) => {
-        const categoryEntries = await tx.productToProductCategory.findMany({ where: { productId: id }, select: { order: true, productCategoryId: true } });
         const eventEntries = await tx.productToProductEvent.findMany({ where: { productId: id }, select: { order: true, productEventId: true } });
         await tx.productToProductEvent.deleteMany({ where: { productId: id } });
-        await tx.productToProductCategory.deleteMany({ where: { productId: id } });
         await tx.product.update({ where: { id }, data: { deletedAt: new Date() } });
-        for (const entry of categoryEntries) {
-          await this.orderHelper.reorderAfterDelete('productToProductCategory', entry.order, { productCategoryId: entry.productCategoryId }, tx);
-        }
         for (const entry of eventEntries) {
           await this.orderHelper.reorderAfterDelete('productToProductEvent', entry.order, { productEventId: entry.productEventId }, tx);
         }

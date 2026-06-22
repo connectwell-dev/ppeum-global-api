@@ -30,7 +30,7 @@ export class SetProductTranslationDto {
 }
 
 export class SetProductReqDto {
-  @ApiProperty({ description: '상품 분류 ID (중분류)', example: 1, required: false })
+  @ApiProperty({ description: '상품 분류 ID', example: 1, required: false })
   @IsOptional()
   @IsNumber()
   productCategoryId: number;
@@ -105,12 +105,6 @@ export class SetProductReqDto {
   @IsOptional()
   @IsNumber()
   operationInfoId?: number;
-
-  @ApiProperty({ description: '메뉴판 노출 분류 ID 목록', type: [Number], required: false })
-  @IsOptional()
-  @IsArray()
-  @IsNumber({}, { each: true })
-  menuBoardCategoryIds?: number[];
 
   @ApiProperty({ description: '언어별 상품명 목록', type: [SetProductTranslationDto], required: false })
   @IsOptional()

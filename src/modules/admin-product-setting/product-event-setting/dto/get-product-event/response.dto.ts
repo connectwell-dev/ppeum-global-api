@@ -73,11 +73,17 @@ export class GetProductEventListResDto {
   @ApiProperty({ example: ProductEventType.general, enum: ProductEventType, description: '이벤트 타입' })
   eventType: ProductEventType;
 
-  @ApiProperty({ example: '2026-01-01 10:00', description: '시작일시', nullable: true })
+  @ApiProperty({ example: '2026-01-01 10:00', description: '노출 시작일시', nullable: true })
   startDate: string | null;
 
-  @ApiProperty({ example: '2026-12-31 23:59', description: '종료일시 (null이면 상시)', nullable: true })
+  @ApiProperty({ example: '2026-12-31 23:59', description: '노출 종료일시 (null이면 상시)', nullable: true })
   endDate: string | null;
+
+  @ApiProperty({ example: '2026-01-01 10:00', description: '예약가능 시작일시', nullable: true })
+  reservationStartDate: string | null;
+
+  @ApiProperty({ example: '2026-12-31 23:59', description: '예약가능 종료일시 (null이면 상시)', nullable: true })
+  reservationEndDate: string | null;
 
   @ApiProperty({ example: ['mon', 'wed'], enum: WeekDayType, isArray: true, description: '요일 목록' })
   weekDay: WeekDayType[];
@@ -106,26 +112,20 @@ export class GetProductEventDetailResDto {
   @ApiProperty({ example: true, description: '사용 여부' })
   isActive: boolean;
 
-  @ApiProperty({ example: '신규', description: '라벨 내용' })
-  label: string;
-
-  @ApiProperty({ example: 'FFFFFF', description: '배경 색상 코드' })
-  colorBg: string;
-
-  @ApiProperty({ example: '333333', description: '라인 색상 코드' })
-  colorLine: string;
-
-  @ApiProperty({ example: '333333', description: '텍스트 색상 코드' })
-  colorText: string;
-
   @ApiProperty({ example: ProductEventType.general, enum: ProductEventType, description: '이벤트 타입' })
   eventType: ProductEventType;
 
-  @ApiProperty({ example: '2026-01-01 10:00', description: '시작일시', nullable: true })
+  @ApiProperty({ example: '2026-01-01 10:00', description: '노출 시작일시', nullable: true })
   startDate: string | null;
 
-  @ApiProperty({ example: '2026-12-31 23:59', description: '종료일시 (null이면 상시)', nullable: true })
+  @ApiProperty({ example: '2026-12-31 23:59', description: '노출 종료일시 (null이면 상시)', nullable: true })
   endDate: string | null;
+
+  @ApiProperty({ example: '2026-01-01 10:00', description: '예약가능 시작일시', nullable: true })
+  reservationStartDate: string | null;
+
+  @ApiProperty({ example: '2026-12-31 23:59', description: '예약가능 종료일시 (null이면 상시)', nullable: true })
+  reservationEndDate: string | null;
 
   @ApiProperty({ example: ['mon', 'wed'], enum: WeekDayType, isArray: true, description: '요일 목록' })
   weekDay: WeekDayType[];

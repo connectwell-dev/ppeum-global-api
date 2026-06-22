@@ -14,17 +14,6 @@ export class ImageResDto {
   path: string;
 }
 
-export class ProductMenuBoardListResDto {
-  @ApiProperty({ example: 1, description: '메뉴판 분류 ID' })
-  categoryId: number;
-
-  @ApiProperty({ example: '대분류명', description: '대분류명', required: false })
-  mainCategoryName: string;
-
-  @ApiProperty({ example: '중분류명', description: '중분류명', required: false })
-  subCategoryName: string;
-}
-
 export class GetProductDetailResDto {
   @ApiProperty({ example: 1, description: '상품 ID' })
   id: number;
@@ -38,11 +27,8 @@ export class GetProductDetailResDto {
   @ApiProperty({ example: '상품 설명', description: '상품 설명', required: false })
   productDescription: string;
 
-  @ApiProperty({ example: '대분류명', description: '대분류명', required: false })
-  productMainCategoryName: string;
-
-  @ApiProperty({ example: '중분류명', description: '중분류명', required: false })
-  productSubCategoryName: string;
+  @ApiProperty({ example: '분류명', description: '분류명', required: false })
+  productCategoryName: string;
 
   @ApiProperty({ example: 1, description: '상품 분류 ID', required: false })
   productCategoryId: number;
@@ -93,9 +79,6 @@ export class GetProductDetailResDto {
   @ApiProperty({ example: '리프팅 시술 설명', description: '연결 시술설명 타이틀 (요청 언어)', nullable: true })
   operationInfoTitle: string | null;
 
-  @ApiProperty({ description: '메뉴판 분류 목록', type: [ProductMenuBoardListResDto] })
-  menuBoardList: ProductMenuBoardListResDto[];
-
   @ApiProperty({ description: '이미지 목록', type: ImageResDto })
   image: ImageResDto | null;
 
@@ -145,11 +128,8 @@ export class GetProductListResDto {
   @ApiProperty({ example: 'PR001', description: '상품 코드' })
   code: string;
 
-  @ApiProperty({ example: '대분류명', description: '대분류명', required: false })
-  mainCategoryName: string;
-
-  @ApiProperty({ example: '중분류명', description: '중분류명', required: false })
-  subCategoryName: string;
+  @ApiProperty({ example: '분류명', description: '분류명', required: false })
+  categoryName: string;
 
   @ApiProperty({ example: ProductType.single, description: '상품 타입', enum: ProductType })
   productType: ProductType;

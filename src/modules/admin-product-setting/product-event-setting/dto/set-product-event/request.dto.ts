@@ -7,7 +7,6 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  MaxLength,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -33,41 +32,30 @@ export class ProductEventTranslationDto {
 }
 
 export class SetProductEventReqDto {
-  @ApiProperty({ description: '라벨 내용', example: '신규' })
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(10)
-  label: string;
-
-  @ApiProperty({ description: '배경 색상 코드', example: 'FFFFFF' })
-  @IsString()
-  @IsNotEmpty()
-  colorBg: string;
-
-  @ApiProperty({ description: '라인 색상 코드', example: '333333' })
-  @IsString()
-  @IsNotEmpty()
-  colorLine: string;
-
-  @ApiProperty({ description: '텍스트 색상 코드', example: '333333' })
-  @IsString()
-  @IsNotEmpty()
-  colorText: string;
-
   @ApiProperty({ description: '이벤트 타입', enum: ProductEventType, example: ProductEventType.general })
   @IsEnum(ProductEventType)
   @IsNotEmpty()
   eventType: ProductEventType;
 
-  @ApiProperty({ description: '시작일시 (YYYY-MM-DD HH:MM)', example: '2026-01-01 10:00', required: false, nullable: true })
+  @ApiProperty({ description: '노출 시작일시 (YYYY-MM-DD HH:MM)', example: '2026-01-01 10:00', required: false, nullable: true })
   @IsString()
   @IsOptional()
   startDate?: string;
 
-  @ApiProperty({ description: '종료일시 (YYYY-MM-DD HH:MM, null이면 상시)', example: '2026-12-31 23:59', required: false, nullable: true })
+  @ApiProperty({ description: '노출 종료일시 (YYYY-MM-DD HH:MM, null이면 상시)', example: '2026-12-31 23:59', required: false, nullable: true })
   @IsString()
   @IsOptional()
   endDate?: string;
+
+  @ApiProperty({ description: '예약가능 시작일시 (YYYY-MM-DD HH:MM)', example: '2026-01-01 10:00', required: false, nullable: true })
+  @IsString()
+  @IsOptional()
+  reservationStartDate?: string;
+
+  @ApiProperty({ description: '예약가능 종료일시 (YYYY-MM-DD HH:MM, null이면 상시)', example: '2026-12-31 23:59', required: false, nullable: true })
+  @IsString()
+  @IsOptional()
+  reservationEndDate?: string;
 
   @ApiProperty({ description: '요일 목록 (요일 이벤트 시)', enum: WeekDayType, isArray: true, example: ['mon', 'wed'], required: false })
   @IsArray()

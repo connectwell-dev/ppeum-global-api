@@ -6,17 +6,11 @@ import { Language } from '@prisma/client';
 import { ActiveTarget, ProductType } from '@prisma/client';
 
 export class GetProductListReqDto extends PaginationReqDto {
-  @ApiProperty({ description: '대분류 ID', example: 1, required: false })
+  @ApiProperty({ description: '상품 분류 ID', example: 1, required: false })
   @IsOptional()
   @Transform(({ value }) => Number(value))
   @IsNumber()
-  productMainCategoryId?: number;
-
-  @ApiProperty({ description: '중분류 ID', example: 1, required: false })
-  @IsOptional()
-  @Transform(({ value }) => Number(value))
-  @IsNumber()
-  productSubCategoryId?: number;
+  productCategoryId?: number;
 
   @ApiProperty({ description: '상품 타입', example: ProductType.single, required: false, enum: ProductType })
   @IsOptional()
