@@ -1,0 +1,47 @@
+enum GeneralImageType {
+  operation_info // 수술정보
+  event // 이벤트
+  product // 상품
+}
+
+// 다국어 설정 (기준/공용/사용 언어)
+model GeneralInfo {
+  id              Int      @id @default(autoincrement())
+  useLanguage     Json     @default("{\"ja\": false, \"ko\": false, \"en\": false, \"zhCn\": false, \"zhTw\": false, \"vi\": false, \"th\": false, \"ru\": false}") @map("use_language") // 사용 언어
+  defaultLanguage String   @map("default_language") @db.VarChar(10) // 기준 언어
+  publicLanguage  String   @map("public_language") @db.VarChar(10) // 공용 언어
+  createdAt       DateTime @default(now()) @map("created_at") // 생성일시
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") // 수정일시
+
+  @@map("general_info")
+}
+
+model GeneralImageCategory {
+  id        Int               @id @default(autoincrement())
+  name      String            @db.VarChar(50) // 항목 명
+  type      GeneralImageType? @map("type") // 이미지 타입
+  createdAt DateTime          @default(now()) @map("created_at") // 생성일시
+  updatedAt DateTime          @default(now()) @updatedAt @map("updated_at") // 수정일시
+  deletedAt DateTime?         @map("deleted_at") // 삭제일시
+
+  generalImages GeneralImage[]
+
+  @@map("general_image_category")
+}
+
+model GeneralImage {
+  code            String    @id @default(dbgenerated("generate_custom_id('IMG')")) @map("code") // 고유 id
+  imageCategoryId Int       @map("image_category_id") // 이미지 카테고리 아이디
+  name            String    @db.VarChar(50) // 항목 명
+  path            String    @db.VarChar(255) // 이미지 path
+  createdAt       DateTime  @default(now()) @map("created_at") // 생성일시
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") // 수정일시
+  deletedAt       DateTime? @map("deleted_at") // 삭제일시
+
+  imageCategory             GeneralImageCategory       @relation(fields: [imageCategoryId], references: [id], onDelete: Cascade)
+  productTranslations       ProductTranslation[]
+  productEventTranslations  ProductEventTranslation[]
+  operationInfoTranslations OperationInfoTranslation[]
+
+  @@map("general_image")
+}

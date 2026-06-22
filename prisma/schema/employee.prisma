@@ -1,0 +1,61 @@
+enum EmployeeType {
+  doctor // 의사
+  manager // 관리사
+  nurse // 간호사
+  consultant // 상담사
+  coordinator // 코디네이터
+  staff // 직원
+  super_admin // 슈퍼 관리자
+}
+
+// 재직상태
+enum EmploymentStatus {
+  working // 근무
+  leave // 휴직
+  resigned // 퇴사
+}
+
+model Employee {
+  id               Int              @id @default(autoincrement())
+  employeeType     EmployeeType     @map("employee_type")
+  loginId          String           @unique @map("login_id") @db.VarChar(100)
+  password         String           @db.VarChar(255)
+  name             String           @db.VarChar(100)
+  rankId           Int?             @map("rank_id") // EmployeeDeptRank(depth 1) 직급 ID
+  email            String?          @unique @db.VarChar(100)
+  phoneNumber      String?          @map("phone_number") @db.VarChar(100)
+  employmentStatus EmploymentStatus @map("employment_status")
+  adminPermission  Json?            @default("{}") @map("admin_permission") // 관리자 권한
+  userPermission   Json?            @default("{}") @map("user_permission") // 사용자 권한
+  isResetPassword  Boolean          @default(true) @map("is_reset_password") // 비밀번호 초기화 여부
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @default(now()) @updatedAt @map("updated_at")
+  deletedAt        DateTime?        @map("deleted_at")
+
+  rank          EmployeeDeptRank? @relation(fields: [rankId], references: [id])
+  historyLogins HistoryLogin[]
+
+  @@map("employee")
+}
+
+model EmployeeDeptRank {
+  id        Int       @id @default(autoincrement())
+  name      String    @db.VarChar(50) // 구분명
+  order     Int       @default(0) // 노출 순서
+  depth     Int       @default(0) // 0: 부서, 1: 직급
+  parentId  Int?      @map("parent_id") // 부서(depth 0)일 때 null, 직급(depth 1)일 때 부서 id
+  isActive  Boolean   @default(true) @map("is_active") // 사용 여부
+  createdAt DateTime  @default(now()) @map("created_at") // 생성일시
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") // 수정일시
+  deletedAt DateTime? @map("deleted_at") // 삭제일시
+
+  parent    EmployeeDeptRank?  @relation("DeptRankHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children  EmployeeDeptRank[] @relation("DeptRankHierarchy")
+  employees Employee[]
+
+  @@index([isActive])
+  @@index([order])
+  @@index([depth])
+  @@index([parentId])
+  @@map("employee_dept_rank")
+}

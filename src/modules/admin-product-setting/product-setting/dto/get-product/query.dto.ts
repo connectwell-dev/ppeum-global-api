@@ -1,0 +1,51 @@
+import { ApiProperty } from '@nestjs/swagger';
+import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { PaginationReqDto } from '@common/dto/pagination.dto';
+import { Language } from '@prisma/client';
+import { ActiveTarget, ProductType } from '@prisma/client';
+
+export class GetProductListReqDto extends PaginationReqDto {
+  @ApiProperty({ description: '대분류 ID', example: 1, required: false })
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsNumber()
+  productMainCategoryId?: number;
+
+  @ApiProperty({ description: '중분류 ID', example: 1, required: false })
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsNumber()
+  productSubCategoryId?: number;
+
+  @ApiProperty({ description: '상품 타입', example: ProductType.single, required: false, enum: ProductType })
+  @IsOptional()
+  @IsEnum(ProductType)
+  productType?: ProductType;
+
+  @ApiProperty({ description: '노출 대상', example: ActiveTarget.crm, required: false, enum: ActiveTarget })
+  @IsOptional()
+  @IsEnum(ActiveTarget)
+  activeTarget?: ActiveTarget;
+
+  @ApiProperty({ description: '상품명 검색', example: '상품명', required: false })
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @ApiProperty({ description: '미입력 언어 필터', example: 'ko', required: false, enum: Language })
+  @IsOptional()
+  @IsEnum(Language)
+  notInputLanguage?: Language;
+
+  @ApiProperty({ description: '사용 여부', example: true, required: false })
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' ? true : value === 'false' ? false : value)
+  @IsBoolean()
+  isActive?: boolean;
+
+  @ApiProperty({ description: '상품 코드', example: 'PR001', required: false })
+  @IsOptional()
+  @IsString()
+  code?: string;
+}

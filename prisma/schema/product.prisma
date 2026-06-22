@@ -1,0 +1,182 @@
+enum ActiveTarget {
+  crm // 예약
+  web // 웹
+}
+
+enum ProductType {
+  single // 단일상품
+  package // 패키지
+  goods // 제품
+  membership // 멤버십
+  etc // 기타
+  force_create // 잔여시술 수동등록 (상품 없는 단건 시술)
+}
+
+enum ProductEventType {
+  general // 일반
+  first // 첫 방문
+  once // 1회 체험가
+  weekday // 요일별
+}
+
+// 상품 카테고리
+model ProductCategory {
+  id        Int       @id @default(autoincrement())
+  isActive  Boolean   @default(true) @map("is_active") // 활성화 여부
+  order     Int       @default(0) // 노출 순서
+  depth     Int       @default(0) // 0: 대분류, 1: 중분류
+  parentId  Int?      @map("parent_id") // 부모 카테고리 id
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at") // 삭제일시
+
+  parent                      ProductCategory?             @relation("ProductCategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children                    ProductCategory[]            @relation("ProductCategoryHierarchy")
+  products                    Product[]                    @relation("ProductCategoryRelation")
+  menuBoardProducts           ProductToProductCategory[]
+  productCategoryTranslations ProductCategoryTranslation[]
+
+  @@index([parentId])
+  @@index([order])
+  @@index([isActive])
+  @@map("product_category")
+}
+
+model ProductCategoryTranslation {
+  productCategoryId Int      @map("product_category_id")
+  language          Language
+  name              String   @db.VarChar(512) // 분류명
+  createdAt         DateTime @default(now()) @map("created_at") // 생성일시
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at") // 수정일시
+
+  productCategory ProductCategory? @relation(fields: [productCategoryId], references: [id], onDelete: Cascade)
+
+  @@unique([productCategoryId, language])
+  @@index([language])
+  @@map("product_category_translation")
+}
+
+model Product {
+  id                      Int         @id @default(autoincrement())
+  code                    String      @unique @default(dbgenerated("generate_custom_id('PRD')")) @map("code") // 고유 id
+  isActive                Boolean     @default(true) @map("is_active") // 사용여부 여부
+  isDisplay               Boolean     @default(true) @map("is_display") // 노출 여부
+  productCategoryId       Int?        @map("product_category_id") // 카테고리 id
+  productType             ProductType @default(single) @map("product_type") // 상품 타입
+  productPrice            Int         @map("product_price") // 상품 가격
+  productNote             String?        @map("product_note") @db.Text // 상품 비고    
+  activeTarget            ActiveTarget[] @default([]) @map("active_target") // 노출 대상 ( CRM, 웹 )
+  isTaxIncluded           Boolean     @default(true) @map("is_tax_included") // 과세 여부
+  isVatView               Boolean     @default(true) @map("is_vat_view") // vat 표시 여부
+  isSleep                 Boolean     @default(false) @map("is_sleep") // 수면 포함 여부
+  membershipPeriod        Int?        @map("membership_period") // 멤버십 기간 ( 일 )
+  membershipPrepayment    Int?        @map("membership_prepayment") // 멤버십 선불금액
+  membershipAddPrepayment Int?        @map("membership_add_prepayment") // 멤버십 추가 선불금액
+  membershipStartGradeId  Int?        @map("membership_start_grade_id") // 적용 멤버십 등급 id
+  membershipEndGradeId    Int?        @map("membership_end_grade_id") // 종료 멤버십 등급 id
+  operationInfoId         Int?        @map("operation_info_id") // 시술설명 id (상품 1건이 시술설명 1건 참조)
+  changedKeys             Json[]      @default([]) @map("changed_keys") // 변경된 키 ( { key: 'name', changedAt : '2026-02-19 10:00:00' } )
+
+  createdAt DateTime  @default(now()) @map("created_at") // 생성일시
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") // 수정일시
+  deletedAt DateTime? @map("deleted_at") // 삭제일시
+
+  productTranslations        ProductTranslation[]
+  productCategory            ProductCategory?           @relation("ProductCategoryRelation", fields: [productCategoryId], references: [id], onDelete: SetNull)
+  operationInfo             OperationInfo?             @relation(fields: [operationInfoId], references: [id], onDelete: SetNull)
+  productToProductEvents     ProductToProductEvent[]
+  menuBoardProducts          ProductToProductCategory[]
+
+  @@index([productCategoryId])
+  @@index([operationInfoId])
+  @@map("product")
+}
+
+model ProductTranslation {
+  productId     Int       @map("product_id")
+  language      Language  @default(ja) // 사용 언어
+  name          String?   @db.VarChar(512) // 상품명
+  description   String?   @db.Text // 상품 설명
+  imageCode     String?   @map("image_code") // 이미지 code
+  isMatch       Boolean   @default(false) @map("is_match") // 매칭 여부
+  createdAt     DateTime  @default(now()) @map("created_at") // 생성일시
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") // 수정일시
+  lastChangedAt DateTime? @default(now()) @map("last_changed_at") // 마지막 변경일시
+
+  product Product?      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  image   GeneralImage? @relation(fields: [imageCode], references: [code], onDelete: SetNull)
+
+  @@unique([productId, language])
+  @@index([language])
+  @@map("product_translation")
+}
+
+model ProductToProductCategory {
+  productId         Int @map("product_id")
+  productCategoryId Int @map("product_category_id")
+  order             Int @default(0) // 노출 순서
+
+  product         Product?         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productCategory ProductCategory? @relation(fields: [productCategoryId], references: [id], onDelete: Cascade)
+
+  @@id([productId, productCategoryId])
+  @@map("product_to_product_category")
+}
+
+model ProductEvent {
+  id          Int              @id @default(autoincrement())
+  code        String           @unique @default(dbgenerated("generate_custom_id('EVT')")) @map("code") // 고유 id
+  isActive    Boolean          @default(true) @map("is_active") // 사용 여부
+  label       String           @db.VarChar(10) // 이벤트 라벨
+  colorBg     String           @map("color_bg") @db.VarChar(20) // 라벨 배경색 코드
+  colorLine   String           @map("color_line") @db.VarChar(20) // 라벨 선 색상 코드
+  colorText   String           @map("color_text") @db.VarChar(20) // 라벨 텍스트색 코드
+  eventType   ProductEventType @default(general) @map("event_type") // 이벤트 타입
+  startDate   String?          @map("start_date") @db.VarChar(20) // 시작일시
+  endDate     String?          @map("end_date") @db.VarChar(20) // 종료일시
+  weekDay     WeekDayType[]    @default([]) @map("week_day") // 요일 이벤트 시 요일별 설정
+  changedKeys Json[]           @default([]) @map("changed_keys") // 변경된 키 ( { key: 'name', changedAt : '2026-02-19 10:00:00' } )
+  order       Int              @default(0) @map("order") // 노출 순서
+  createdAt   DateTime         @default(now()) @map("created_at") // 생성일시
+  updatedAt   DateTime         @default(now()) @updatedAt @map("updated_at") // 수정일시
+  deletedAt   DateTime?        @map("deleted_at") // 삭제일시
+
+  productEventTranslations ProductEventTranslation[]
+  productToProductEvents   ProductToProductEvent[] // 상품 이벤트 연결
+
+  @@index([order])
+  @@map("product_event")
+}
+
+model ProductEventTranslation {
+  productEventId Int
+  language       Language
+  name           String?   @db.VarChar(512) // 이벤트명
+  imageCode      String?   @map("image_code") // 이미지 code
+  isMatch        Boolean   @default(false) @map("is_match") // 매칭 여부
+  createdAt      DateTime  @default(now()) @map("created_at") // 생성일시
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") // 수정일시
+  lastChangedAt  DateTime? @default(now()) @map("last_changed_at") // 마지막 변경일시
+
+  productEvent ProductEvent? @relation(fields: [productEventId], references: [id], onDelete: Cascade)
+  image        GeneralImage? @relation(fields: [imageCode], references: [code], onDelete: SetNull)
+
+  @@unique([productEventId, language])
+  @@index([language])
+  @@map("product_event_translation")
+}
+
+model ProductToProductEvent {
+  productId            Int     @map("product_id")
+  productEventId       Int     @map("product_event_id")
+  eventPrice           Int     @default(0) @map("event_price") // 이벤트 가격
+  eventDiscountPercent Float   @default(0) @map("event_discount_percent") // 이벤트 할인 퍼센트
+  order                Int     @default(0) @map("order") // 노출 순서
+  isActive             Boolean @default(true) @map("is_active") // 사용 여부
+
+  product      Product?      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productEvent ProductEvent? @relation(fields: [productEventId], references: [id], onDelete: Cascade)
+
+  @@id([productId, productEventId])
+  @@map("product_to_product_event")
+}

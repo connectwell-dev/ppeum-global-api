@@ -1,0 +1,21 @@
+enum Platform {
+  Admin
+  CRM
+}
+
+model HistoryLogin {
+  id                Int      @id @default(autoincrement())
+  employeeId        Int      @map("employee_id")
+  platform          Platform @map("platform")
+  isSuccess         Boolean  @map("is_success")
+  connectionIp      String?  @map("connection_ip") @db.VarChar(100)
+  connectionBrowser String?  @map("connection_browser") @db.VarChar(100)
+  connectionOs      String?  @map("connection_os") @db.VarChar(100)
+  connectionUrl     String?  @map("connection_url") @db.VarChar(100)
+  note              String?  @map("note") @db.Text
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  @@map("history_login")
+}

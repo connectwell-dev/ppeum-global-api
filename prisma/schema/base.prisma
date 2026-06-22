@@ -1,0 +1,28 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Language {
+  ja // 일본어
+  ko // 한국어
+  zhCN // 중국어(간체)
+  zhTW // 중국어(번체)
+  en // 영어
+  th // 태국어
+  vi // 베트남어
+  ru // 러시아어
+}
+
+enum WeekDayType {
+  mon
+  tue
+  wed
+  thu
+  fri
+  sat
+  sun
+}
