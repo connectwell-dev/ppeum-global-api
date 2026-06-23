@@ -11,7 +11,7 @@ import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 import { AuthModule } from './modules/auth/auth.module';
 import { AdminGeneralSettingModule } from './modules/admin-general-setting/admin-general-setting.module';
 import { AdminProductSettingModule } from './modules/admin-product-setting/admin-product-setting.module';
-import { AdminOperationSettingModule } from './modules/admin-operation-setting/admin-operation-setting.module';
+import { AdminProductDetailSettingModule } from './modules/admin-product-detail-setting/admin-product-detail-setting.module';
 import { AdminPolicySettingModule } from './modules/admin-policy-setting/admin-policy-setting.module';
 import { AdminPopupSettingModule } from './modules/admin-popup-setting/admin-popup-setting.module';
 
@@ -33,7 +33,7 @@ const envFilePath = `.env.${nodeEnv}`;
     AuthModule,
     AdminGeneralSettingModule,
     AdminProductSettingModule,
-    AdminOperationSettingModule,
+    AdminProductDetailSettingModule,
     AdminPolicySettingModule,
     AdminPopupSettingModule
   ],

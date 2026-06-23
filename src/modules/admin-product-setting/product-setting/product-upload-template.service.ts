@@ -47,7 +47,7 @@ export class ProductUploadTemplateService {
   async generateTemplate(): Promise<ExcelJS.Buffer> {
     const langs = this.getAllLanguages();
     const groups = await this.prisma.productGroup.findMany({ orderBy: { code: 'asc' } });
-    const operationInfos = await this.prisma.operationInfo.findMany({
+    const detailInfos = await this.prisma.productDetailInfo.findMany({
       where: { deletedAt: null },
       select: { code: true },
       orderBy: { code: 'asc' },
@@ -63,7 +63,7 @@ export class ProductUploadTemplateService {
       { header: '이벤트가', key: 'eventPrice', width: 12 },
       { header: '상품노출 시작일', key: 'startDate', width: 18 },
       { header: '상품노출 종료일', key: 'endDate', width: 18 },
-      { header: '상세페이지코드', key: 'operationInfoCode', width: 20 },
+      { header: '상세페이지코드', key: 'productDetailInfoCode', width: 20 },
     ];
     for (const l of langs) headers.push({ header: `상품명-${LANG_DISPLAY[l] ?? l}`, key: `name_${l}`, width: 24 });
     for (const l of langs) headers.push({ header: `상품설명-${LANG_DISPLAY[l] ?? l}`, key: `desc_${l}`, width: 30 });
@@ -91,7 +91,7 @@ export class ProductUploadTemplateService {
 
     // ── 예시 10건 ──
     const groupCode = groups[0]?.code ?? 'GRP_20260622_0001';
-    const opInfoCode = operationInfos[0]?.code ?? '';
+    const detailInfoCode = detailInfos[0]?.code ?? '';
 
     for (let i = 0; i < 10; i++) {
       const row: Record<string, any> = {
@@ -100,7 +100,7 @@ export class ProductUploadTemplateService {
         eventPrice: SAMPLE_EVENT_PRICES[i] ?? '',
         startDate: '2026-01-01',
         endDate: i % 3 === 0 ? '' : '2026-12-31',
-        operationInfoCode: i < 3 ? opInfoCode : '',
+        productDetailInfoCode: i < 3 ? detailInfoCode : '',
       };
       for (const l of langs) {
         const names = SAMPLE_NAMES[l] ?? SAMPLE_NAMES['en'];
@@ -167,7 +167,7 @@ export class ProductUploadTemplateService {
     refSheet2.getRow(1).eachCell((cell) => {
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDCE6F1' } };
     });
-    for (const info of operationInfos) refSheet2.addRow({ code: info.code });
+    for (const info of detailInfos) refSheet2.addRow({ code: info.code });
 
     return await wb.xlsx.writeBuffer();
   }

@@ -3,6 +3,7 @@ import { CustomException } from '@src/common/exceptions';
 import { formatLocalYmdHms } from '@src/common/utils/date-format';
 import { PrismaService } from '@src/core/prisma/prisma.service';
 import { S3Service } from '@src/core/s3/s3.service';
+import { PutBasicPopupReqDto } from './dto/put-basic-popup/request.dto';
 
 @Injectable()
 export class BasicPopupSettingService {
@@ -11,6 +12,16 @@ export class BasicPopupSettingService {
     private readonly prisma: PrismaService,
     private readonly s3Service: S3Service,
   ) { }
+
+  private async findBasicPopupCategoryOrThrow(categoryId: number) {
+    const category = await this.prisma.popupBasicCategory.findFirst({
+      where: { id: categoryId, deletedAt: null },
+    });
+    if (!category) {
+      throw new CustomException('basic-popup.not_found', 'BAD_REQUEST', { field: 'id', fieldMessage: 'basic-popup.not_found' });
+    }
+    return category;
+  }
 
   private async findBasicPopupOrThrow(popupBasicId: number) {
     const popup = await this.prisma.popupBasic.findFirst({
@@ -22,11 +33,11 @@ export class BasicPopupSettingService {
     return popup;
   }
 
-  async getBasicPopupList() {
+  async getBasicPopupCategoryList() {
     try {
-      const [total, popupBasic] = await Promise.all([
-        this.prisma.popupBasic.count({ where: { deletedAt: null } }),
-        this.prisma.popupBasic.findMany({
+      const [total, popupBasicCategory] = await Promise.all([
+        this.prisma.popupBasicCategory.count({ where: { deletedAt: null } }),
+        this.prisma.popupBasicCategory.findMany({
           where: { deletedAt: null },
           select: {
             id: true,
@@ -35,59 +46,48 @@ export class BasicPopupSettingService {
           },
           orderBy: { language: 'asc' }
         })
-      ])
-      return { total, popupBasic };
+      ]);
+      return { total, popupBasicCategory };
     } catch (error) {
       if (error instanceof CustomException) throw error;
       throw new CustomException();
     }
   }
 
-  async getBasicPopupDetail(popupBasicId: number) {
+  async getBasicPopupCategoryDetail(categoryId: number) {
     try {
-      const basicPopup = await this.prisma.popupBasic.findFirst({
-        where: { id: popupBasicId, deletedAt: null },
+      const category = await this.findBasicPopupCategoryOrThrow(categoryId);
+
+      const popupBasics = await this.prisma.popupBasic.findMany({
+        where: { popupBasicCategoryId: categoryId, deletedAt: null },
         select: {
           id: true,
-          language: true,
           startAt: true,
           startTime: true,
           endAt: true,
           endTime: true,
-          type: true,
+          createdAt: true,
           images: {
             select: {
               path: true
             }
           }
-        }
-      });
-
-      if (!basicPopup) {
-        throw new CustomException('basic-popup.not_found', 'BAD_REQUEST', { field: 'id', fieldMessage: 'basic-popup.not_found' });
-      }
-
-      const basicPopupCreatedDates = await this.prisma.popupBasic.findMany({
-        where: { language: basicPopup.language, deletedAt: null, type: basicPopup.type },
-        select: {
-          id: true,
-          createdAt: true
         },
         orderBy: { createdAt: 'desc' }
       });
 
-      const mapData = basicPopupCreatedDates.map((item) => {
+      const mapData = popupBasics.map((item) => {
         const { createdAt, ...rest } = item;
-        return { ...rest, createdAt: formatLocalYmdHms(createdAt) }
-      })
-      return { ...basicPopup, createdDates: mapData };
+        return { ...rest, createdAt: formatLocalYmdHms(createdAt) };
+      });
 
+      return { ...category, popupBasics: mapData };
     } catch (error) {
       if (error instanceof CustomException) throw error;
       throw new CustomException();
     }
   }
-  
+
   async setBasicPopupImage(popupBasicId: number, file: Express.Multer.File) {
     try {
       await this.findBasicPopupOrThrow(popupBasicId);
@@ -96,6 +96,40 @@ export class BasicPopupSettingService {
       await this.prisma.popupBasicImage.create({
         data: { popupBasicId, path: s3Key },
       });
+    } catch (error) {
+      if (error instanceof CustomException) throw error;
+      throw new CustomException();
+    }
+  }
+
+  async putBasicPopup(popupBasicId: number, dto: PutBasicPopupReqDto, file?: Express.Multer.File) {
+    try {
+      await this.findBasicPopupOrThrow(popupBasicId);
+
+      await this.prisma.popupBasic.update({
+        where: { id: popupBasicId },
+        data: {
+          startAt: dto.startAt,
+          startTime: dto.startTime,
+          endAt: dto.endAt,
+          endTime: dto.endTime,
+        },
+      });
+
+      if (file) {
+        const oldImages = await this.prisma.popupBasicImage.findMany({
+          where: { popupBasicId },
+        });
+        for (const img of oldImages) {
+          await this.s3Service.delete(img.path);
+        }
+        await this.prisma.popupBasicImage.deleteMany({ where: { popupBasicId } });
+
+        const s3Key = await this.s3Service.upload(file, 'popup-basic');
+        await this.prisma.popupBasicImage.create({
+          data: { popupBasicId, path: s3Key },
+        });
+      }
     } catch (error) {
       if (error instanceof CustomException) throw error;
       throw new CustomException();

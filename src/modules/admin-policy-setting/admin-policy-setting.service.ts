@@ -8,6 +8,16 @@ import { PutPolicyReqDto } from './dto/put-policy/request.dto';
 export class AdminPolicySettingService {
   constructor(private readonly prisma: PrismaService) { }
 
+  private async findPolicyCategoryOrThrow(categoryId: number) {
+    const category = await this.prisma.policyCategory.findFirst({
+      where: { id: categoryId, deletedAt: null },
+    });
+    if (!category) {
+      throw new CustomException('policy.not_found', 'BAD_REQUEST', { field: 'id', fieldMessage: 'policy.not_found' });
+    }
+    return category;
+  }
+
   private async findPolicyOrThrow(policyId: number) {
     const policy = await this.prisma.policy.findFirst({
       where: { id: policyId, deletedAt: null },
@@ -18,11 +28,11 @@ export class AdminPolicySettingService {
     return policy;
   }
 
-  async getPoliicyList() {
+  async getPolicyCategoryList() {
     try {
-      const [total, policy] = await Promise.all([
-        this.prisma.policy.count({ where: { deletedAt: null } }),
-        this.prisma.policy.findMany({
+      const [total, policyCategory] = await Promise.all([
+        this.prisma.policyCategory.count({ where: { deletedAt: null } }),
+        this.prisma.policyCategory.findMany({
           where: { deletedAt: null },
           select: {
             id: true,
@@ -32,31 +42,33 @@ export class AdminPolicySettingService {
           orderBy: { language: 'asc' }
         }),
       ]);
-      return { total, policy };
+      return { total, policyCategory };
     } catch (error) {
       if (error instanceof CustomException) throw error;
       throw new CustomException();
     }
   }
 
-  async getPoliicyDetail(policyId: number) {
+  async getPolicyCategoryDetail(categoryId: number) {
     try {
-      const policy = await this.findPolicyOrThrow(policyId);
+      const category = await this.findPolicyCategoryOrThrow(categoryId);
 
-      const policyCreatedDates = await this.prisma.policy.findMany({
-        where: { language: policy.language, type: policy.type, deletedAt: null },
+      const policies = await this.prisma.policy.findMany({
+        where: { policyCategoryId: categoryId, deletedAt: null },
         select: {
           id: true,
+          note: true,
           createdAt: true
         },
         orderBy: { createdAt: 'desc' }
       });
 
-      const mapData = policyCreatedDates.map((item) => {
+      const mapData = policies.map((item) => {
         const { createdAt, ...rest } = item;
-        return { ...rest, createdAt: formatLocalYmdHms(createdAt) }
-      })
-      return { ...policy, createdDates: mapData };
+        return { ...rest, createdAt: formatLocalYmdHms(createdAt) };
+      });
+
+      return { ...category, policies: mapData };
     } catch (error) {
       if (error instanceof CustomException) throw error;
       throw new CustomException();

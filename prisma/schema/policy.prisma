@@ -3,14 +3,24 @@ enum PolicyType {
   privacy // 개인정보처리방침
 }
 
-model Policy {
+model PolicyCategory {
   id        Int        @id @default(autoincrement())
   language  Language   @map("language")
   type      PolicyType @map("type") // 약관 타입
-  note      String     @map("note") @db.Text() // 내용
   createdAt DateTime   @default(now()) @map("created_at") // 생성일시
   updatedAt DateTime   @default(now()) @updatedAt @map("updated_at") // 수정일시
   deletedAt DateTime?  @map("deleted_at") // 삭제일시
+
+  @@map("policy_category")
+}
+
+model Policy {
+  id               Int       @id @default(autoincrement())
+  policyCategoryId Int
+  note             String    @map("note") @db.Text() // 내용
+  createdAt        DateTime  @default(now()) @map("created_at") // 생성일시
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") // 수정일시
+  deletedAt        DateTime? @map("deleted_at") // 삭제일시
 
   @@map("policy")
 }
