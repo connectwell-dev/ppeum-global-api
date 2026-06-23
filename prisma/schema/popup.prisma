@@ -1,31 +1,72 @@
-enum PopupBasicType {
+enum PopupType {
   pc // pc
   mobile // mobile
 }
 
+model PopupBasicCategory {
+  id        Int       @id @default(autoincrement())
+  language  Language  @map("language") // 언어
+  type      PopupType @map("type") // 팝업 타입
+  createdAt DateTime  @default(now()) @map("created_at") // 생성일시
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") // 수정일시
+  deletedAt DateTime? @map("deleted_at") // 삭제일시
+
+  @@map("popup_basic_category")
+}
+
 model PopupBasic {
-  id        Int            @id @default(autoincrement())
-  language  Language       @map("language") // 언어
-  type      PopupBasicType @map("type") // 기본 팝업 타입
-  startAt   String         @map("start_at") // 시작일
-  startTime String         @map("start_time") // 시작시간
-  endAt     String         @map("end_at") // 종료일
-  endTime   String         @map("end_time") // 종료시간
-  createdAt DateTime       @default(now()) @map("created_at") // 생성일시
-  updatedAt DateTime       @default(now()) @updatedAt @map("updated_at") // 수정일시
-  deletedAt DateTime?      @map("deleted_at") // 삭제일시
+  id                   Int       @id @default(autoincrement())
+  popupBasicCategoryId Int       @map("popup_basic_category_id")
+  startAt              String    @map("start_at") // 시작일
+  startTime            String    @map("start_time") // 시작시간
+  endAt                String    @map("end_at") // 종료일
+  endTime              String    @map("end_time") // 종료시간
+  createdAt            DateTime  @default(now()) @map("created_at") // 생성일시
+  updatedAt            DateTime  @default(now()) @updatedAt @map("updated_at") // 수정일시
+  deletedAt            DateTime? @map("deleted_at") // 삭제일시
 
   images PopupBasicImage[]
 
   @@map("popup_basic")
 }
 
-model PopupMain {
+model PopupBasicImage {
+  id           Int       @id @default(autoincrement())
+  popupBasicId Int       @map("popup_basic_id")
+  path         String    @db.VarChar(255) // 이미지 path
+  createdAt    DateTime  @default(now()) @map("created_at") // 생성일시
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") // 수정일시
+  deletedAt    DateTime? @map("deleted_at") // 삭제일시
+
+  popupBasic PopupBasic @relation(fields: [popupBasicId], references: [id], onDelete: Cascade)
+
+  @@map("popup_basic_image")
+}
+
+model PopupMainCategory {
   id        Int       @id @default(autoincrement())
   language  Language  @map("language") // 언어
+  type      PopupType @map("type") // 팝업 타입
   createdAt DateTime  @default(now()) @map("created_at") // 생성일시
   updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") // 수정일시
   deletedAt DateTime? @map("deleted_at") // 삭제일시
+
+  @@map("popup_main_category")
+}
+
+model PopupMain {
+  id                  Int       @id @default(autoincrement())
+  popupMainCategoryId Int       @map("popup_main_category_id")
+  title               String    @db.VarChar(100) // 타이틀
+  link                String?   @db.VarChar(500) // 링크
+  isNewTab            Boolean   @default(false) @map("is_new_tab") // 새창여부
+  startAt             String    @map("start_at") // 시작일
+  startTime           String    @map("start_time") // 시작시간
+  endAt               String    @map("end_at") // 종료일
+  endTime             String    @map("end_time") // 종료시간
+  createdAt           DateTime  @default(now()) @map("created_at") // 생성일시
+  updatedAt           DateTime  @default(now()) @updatedAt @map("updated_at") // 수정일시
+  deletedAt           DateTime? @map("deleted_at") // 삭제일시
 
   images PopupMainImage[]
 
@@ -37,13 +78,6 @@ model PopupMainImage {
   popupMainId Int       @map("popup_main_id")
   order       Int       @default(1) @map("order")
   path        String    @db.VarChar(255) // 이미지 path
-  title       String    @db.VarChar(100) // 타이틀
-  link        String?   @db.VarChar(500) // 링크
-  isNewTab    Boolean   @default(false) @map("is_new_tab") // 새창여부
-  startAt     String    @map("start_at") // 시작일
-  startTime   String    @map("start_time") // 시작시간
-  endAt       String    @map("end_at") // 종료일
-  endTime     String    @map("end_time") // 종료시간
   createdAt   DateTime  @default(now()) @map("created_at") // 생성일시
   updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") // 수정일시
   deletedAt   DateTime? @map("deleted_at") // 삭제일시
@@ -51,16 +85,4 @@ model PopupMainImage {
   popupMain PopupMain @relation(fields: [popupMainId], references: [id], onDelete: Cascade)
 
   @@map("popup_main_image")
-}
-
-model PopupBasicImage {
-  id           Int        @id @default(autoincrement())
-  popupBasicId Int        @map("popup_basic_id")
-  path         String     @db.VarChar(255) // 이미지 path
-  createdAt    DateTime   @default(now()) @map("created_at") // 생성일시
-  updatedAt    DateTime   @default(now()) @updatedAt @map("updated_at") // 수정일시
-  deletedAt    DateTime?  @map("deleted_at") // 삭제일시
-  popupBasic   PopupBasic @relation(fields: [popupBasicId], references: [id], onDelete: Cascade)
-
-  @@map("popup_basic_image")
 }

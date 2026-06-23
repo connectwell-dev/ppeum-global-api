@@ -13,6 +13,7 @@ import { AdminGeneralSettingModule } from './modules/admin-general-setting/admin
 import { AdminProductSettingModule } from './modules/admin-product-setting/admin-product-setting.module';
 import { AdminProductDetailSettingModule } from './modules/admin-product-detail-setting/admin-product-detail-setting.module';
 import { AdminPolicySettingModule } from './modules/admin-policy-setting/admin-policy-setting.module';
+import { AdminPopupSettingModule } from './modules/admin-popup-setting/admin-popup-setting.module';
 
 const nodeEnv = process.env.NODE_ENV || 'development';
 const envFilePath = `.env.${nodeEnv}`;
@@ -33,7 +34,8 @@ const envFilePath = `.env.${nodeEnv}`;
     AdminGeneralSettingModule,
     AdminProductSettingModule,
     AdminProductDetailSettingModule,
-    AdminPolicySettingModule
+    AdminPolicySettingModule,
+    AdminPopupSettingModule
   ],
   providers: [
     { provide: APP_FILTER, useClass: GlobalExceptionFilter },
