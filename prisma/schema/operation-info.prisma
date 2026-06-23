@@ -1,6 +1,7 @@
 // 시술설명 (상품에 매칭)
 model OperationInfo {
   id          Int       @id @default(autoincrement())
+  code        String    @unique @default(dbgenerated("generate_custom_id('INFO')")) @map("code") // 고유 id
   changedKeys Json[]    @default([]) @map("changed_keys") // 변경된 키 ( { key: 'name', changedAt : '2026-02-19 10:00:00' } )
   createdAt   DateTime  @default(now()) @map("created_at") // 생성일시
   updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") // 수정일시

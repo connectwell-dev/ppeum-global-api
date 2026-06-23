@@ -22,7 +22,7 @@ export class SetProductTranslationDto {
   @EmptyToCustomValue()
   description?: string;
 
-  @ApiProperty({ description: '이미지 Code', example: 'IMG_New_Product', required: false })
+  @ApiProperty({ description: '이미지 code (없으면 기준언어 사용)', example: 'IMG00000001', required: false })
   @IsOptional()
   @IsString()
   @EmptyToCustomValue()
@@ -44,6 +44,11 @@ export class SetProductReqDto {
   @IsNumber()
   @IsNotEmpty()
   productPrice: number;
+
+  @ApiProperty({ description: '이벤트가', example: 80000, required: false })
+  @IsOptional()
+  @IsNumber()
+  eventPrice?: number;
 
   @ApiProperty({ description: '노출 시작일', example: '2026-01-01', required: false })
   @IsOptional()

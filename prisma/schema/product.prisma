@@ -34,12 +34,24 @@ model ProductCategoryTranslation {
   @@map("product_category_translation")
 }
 
+// 상품 그룹 (엑셀 업로드 등에서 사용하는 분류 코드, 노출 카테고리와는 별개 개념)
+model ProductGroup {
+  id        Int      @id @default(autoincrement())
+  code      String   @unique @map("code") @db.VarChar(100) // 분류코드
+  name      String   @map("name") @db.VarChar(512) // 분류명
+  createdAt DateTime @default(now()) @map("created_at") // 생성일시
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") // 수정일시
+
+  @@map("product_group")
+}
+
 model Product {
   id                Int       @id @default(autoincrement())
   code              String    @unique @default(dbgenerated("generate_custom_id('PRD')")) @map("code") // 고유 id
   isActive          Boolean   @default(true) @map("is_active") // 사용여부
   productCategoryId Int?      @map("product_category_id") // 카테고리 id
   productPrice      Int       @map("product_price") // 상품 가격
+  eventPrice        Int?      @map("event_price") // 이벤트가 (null이면 없음)
   startDate         String?   @map("start_date") @db.VarChar(20) // 노출 시작일
   endDate           String?   @map("end_date") @db.VarChar(20) // 노출 종료일 (null이면 상시)
   operationInfoId   Int?      @map("operation_info_id") // 시술설명 id (상품 1건이 시술설명 1건 참조)
@@ -64,7 +76,7 @@ model ProductTranslation {
   language      Language  @default(ja) // 사용 언어
   name          String?   @db.VarChar(512) // 상품명
   description   String?   @db.Text // 상품 설명
-  imageCode     String?   @map("image_code") // 이미지 code
+  imageCode     String?   @map("image_code") // 이미지 code (언어별, 없으면 기준언어 사용)
   isView        Boolean   @default(true) @map("is_view") // 해당 언어권 노출 여부
   isMatch       Boolean   @default(false) @map("is_match") // 매칭 여부
   createdAt     DateTime  @default(now()) @map("created_at") // 생성일시

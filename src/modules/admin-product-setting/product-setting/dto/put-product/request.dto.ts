@@ -18,7 +18,7 @@ export class PutProductReqDto extends OmitType(SetProductReqDto, ['productTransl
   @EmptyToCustomValue()
   description?: string;
 
-  @ApiProperty({ description: '이미지 Code', example: 'IMG_New_Product', required: false })
+  @ApiProperty({ description: '이미지 code (기준언어)', required: false })
   @IsOptional()
   @IsString()
   @EmptyToCustomValue()
@@ -51,9 +51,10 @@ export class PutProductTranslationReqDto {
   @IsString()
   description?: string;
 
-  @ApiProperty({ description: '이미지 Code', example: 'IMG_New_Product', required: false })
+  @ApiProperty({ description: '이미지 code (없으면 기준언어 사용)', required: false })
   @IsOptional()
   @IsString()
+  @EmptyToCustomValue()
   imageCode?: string;
 
   @ApiProperty({ description: '해당 언어권 노출 여부', example: true, required: false })

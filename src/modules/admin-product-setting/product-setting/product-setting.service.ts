@@ -27,7 +27,6 @@ export class ProductSettingService {
   findKeys = [
     { key: 'name', defaultValue: '' },
     { key: 'description', defaultValue: '' },
-    { key: 'imageCode', defaultValue: '' },
   ];
 
   async duplicateNameCheck(name: string, language: Language, productId?: number, isSet: boolean = true): Promise<void> {
@@ -153,6 +152,7 @@ export class ProductSettingService {
           categoryName: categoryName,
           name: pickTranslation(item.productTranslations ?? [], 'name', headerLang, defaultLang),
           productPrice: item.productPrice,
+          eventPrice: item.eventPrice ?? null,
           startDate: item.startDate ?? null,
           endDate: item.endDate ?? null,
           notInputLanguages,
@@ -175,7 +175,7 @@ export class ProductSettingService {
         where: { id, deletedAt: null },
         include: {
           productTranslations: {
-            select: { language: true, name: true, description: true, imageCode: true, isView: true, isMatch: true, lastChangedAt: true, image: { select: { code: true, name: true, path: true } } },
+            select: { language: true, name: true, description: true, imageCode: true, image: { select: { code: true, name: true, path: true } }, isView: true, isMatch: true, lastChangedAt: true },
           },
           operationInfo: {
             include: {
@@ -203,7 +203,6 @@ export class ProductSettingService {
 
       const categoryName = pickTranslation(product.productCategory?.productCategoryTranslations ?? [], 'name', headerLang, defaultLang)
 
-      const image = pickTranslation(product.productTranslations ?? [], 'image', defaultLang, defaultLang)
       const operationInfoTitle = pickTranslation(product.operationInfo?.operationInfoTranslations ?? [], 'title', headerLang, defaultLang) ?? null;
 
       return {
@@ -214,13 +213,14 @@ export class ProductSettingService {
         productCategoryName: categoryName,
         productCategoryId: product.productCategoryId,
         productPrice: product.productPrice,
+        eventPrice: product.eventPrice ?? null,
+        image: defaultTranslation?.image ?? null,
         startDate: product.startDate ?? null,
         endDate: product.endDate ?? null,
         isActive: product.isActive,
         isView: defaultTranslation?.isView ?? true,
         operationInfoId: product.operationInfoId ?? null,
         operationInfoTitle,
-        image: image ?? null,
         createdAt: product.createdAt,
         updatedAt: product.updatedAt,
       } as any;
@@ -274,7 +274,7 @@ export class ProductSettingService {
         select: {
           changedKeys: true,
           productTranslations: {
-            select: { language: true, name: true, description: true, imageCode: true, isView: true, isMatch: true, lastChangedAt: true, image: { select: { code: true, name: true, path: true } } },
+            select: { language: true, name: true, description: true, imageCode: true, image: { select: { code: true, name: true, path: true } }, isView: true, isMatch: true, lastChangedAt: true },
           },
         },
       });
@@ -284,26 +284,26 @@ export class ProductSettingService {
 
       const targetTranslation = product.productTranslations.find((t) => t.language === language) ?? null;
 
+      // 기준언어 이미지 (폴백용)
+      const defaultImage = pickTranslation(product.productTranslations ?? [], 'image', defaultLang, defaultLang) ?? null;
+
       // origin 정보 조회
       let originName = null;
       let originDescription = null;
       let originImage = null;
-      let originImageCode = null;
       if (language === publicLang) {
         originName = pickTranslation(product.productTranslations ?? [], 'name', defaultLang, defaultLang)
         originDescription = pickTranslation(product.productTranslations ?? [], 'description', defaultLang, defaultLang)
         originImage = pickTranslation(product.productTranslations ?? [], 'image', defaultLang, defaultLang)
-        originImageCode = pickTranslation(product.productTranslations ?? [], 'imageCode', defaultLang, defaultLang)
       } else {
         originName = pickTranslation(product.productTranslations ?? [], 'name', publicLang, defaultLang)
         originDescription = pickTranslation(product.productTranslations ?? [], 'description', publicLang, defaultLang)
         originImage = pickTranslation(product.productTranslations ?? [], 'image', publicLang, defaultLang)
-        originImageCode = pickTranslation(product.productTranslations ?? [], 'imageCode', publicLang, defaultLang)
       }
 
       let notMatchKeys = notMatchKeyFind(
-        { name: originName ?? '', description: originDescription ?? '', imageCode: originImageCode ?? '' },
-        { name: targetTranslation?.name ?? '', description: targetTranslation?.description ?? '', imageCode: targetTranslation?.imageCode ?? '' },
+        { name: originName ?? '', description: originDescription ?? '' },
+        { name: targetTranslation?.name ?? '', description: targetTranslation?.description ?? '' },
         this.findKeys,
       );
       notMatchKeys = notMatchKeys.map((item) => ({ ...item, message: ERROR_MESSAGE[item.message]?.[headerLang] }));
@@ -319,13 +319,13 @@ export class ProductSettingService {
       return {
         name: targetTranslation?.name ?? '',
         description: targetTranslation?.description ?? '',
-        image: targetTranslation?.image ?? null,
+        image: targetTranslation?.image ?? defaultImage,
         isView: targetTranslation?.isView ?? true,
         originName: originName ?? '',
         originDescription: originDescription ?? '',
         originImage: originImage ?? null,
         notMatchKeys,
-      };
+      } as any;
     } catch (error) {
       if (error instanceof CustomException) throw error;
       throw new CustomException();
@@ -345,6 +345,7 @@ export class ProductSettingService {
           data: {
             productCategoryId: dto.productCategoryId ?? null,
             productPrice: dto.productPrice,
+            eventPrice: dto.eventPrice ?? null,
             startDate: dto.startDate || null,
             endDate: dto.endDate || null,
             isActive: dto.isActive,
@@ -387,11 +388,10 @@ export class ProductSettingService {
       if (!dbProduct) throw new CustomException('common.not_found', 'BAD_REQUEST');
       const originName = dbProduct.name ?? '';
       const originDesc = dbProduct.description ?? '';
-      const originImageCode = dbProduct.imageCode ?? '';
 
       let addChangedKeys: ChangedKey[] = [];
       if (!dto.isSimpleChange) {
-        const translationDto = { name: dto.name, description: dto.description ?? '', imageCode: dto.imageCode ?? '' };
+        const translationDto = { name: dto.name, description: dto.description ?? '' };
         changedKeyFind(dbProduct, translationDto, this.findKeys);
         addChangedKeys = changeWordFind(translationDto).addChangedKeys;
       }
@@ -407,6 +407,7 @@ export class ProductSettingService {
           data: {
             productCategoryId: dto.productCategoryId ?? null,
             productPrice: dto.productPrice,
+            eventPrice: dto.eventPrice ?? null,
             startDate: dto.startDate || null,
             endDate: dto.endDate || null,
             isActive: dto.isActive,
@@ -424,15 +425,14 @@ export class ProductSettingService {
 
         const nameChanged = dto.name !== originName;
         const descChanged = (dto.description ?? '') !== originDesc;
-        const imageCodeChanged = (dto.imageCode || '') !== originImageCode;
         const translationUpdate: any = {
-          ...((nameChanged || descChanged || imageCodeChanged) ? {
+          ...((nameChanged || descChanged) ? {
             ...(nameChanged ? { name: dto.name } : {}),
             ...(descChanged ? { description: dto.description || null } : {}),
-            ...(imageCodeChanged ? { imageCode: dto.imageCode || null } : {}),
             isMatch: true,
             lastChangedAt: new Date(),
           } : {}),
+          imageCode: dto.imageCode || null,
           isView: dto.isView ?? true,
         };
         await tx.productTranslation.upsert({
@@ -444,7 +444,6 @@ export class ProductSettingService {
         const ohterUpdate: any = {}
         if (!dto.name) ohterUpdate.name = null
         if (!dto.description) ohterUpdate.description = null
-        if (!dto.imageCode) ohterUpdate.imageCode = null
         await tx.productTranslation.updateMany({
           where: { productId: id, language: { notIn: [defaultLang] } },
           data: ohterUpdate,
@@ -472,15 +471,15 @@ export class ProductSettingService {
         where: { id, deletedAt: null },
         include: {
           productTranslations: {
-            select: { language: true, name: true, description: true, imageCode: true, isMatch: true, lastChangedAt: true, image: { select: { code: true, name: true, path: true } } },
+            select: { language: true, name: true, description: true, isMatch: true, lastChangedAt: true },
           },
         },
       });
       if (!product) return {};
       const result: { [lang: string]: any } = {};
       for (const translation of product.productTranslations) {
-        const { image, language, ...translationData } = translation as any;
-        result[language] = { ...product, ...translationData, image: image, };
+        const { language, ...translationData } = translation as any;
+        result[language] = { ...product, ...translationData };
       }
       return result;
     } catch (error) {
@@ -526,7 +525,7 @@ export class ProductSettingService {
   }
 
   async putProductPublicTranslation(id: number, dto: PutProductPublicTranslationReqDto): Promise<string> {
-    const { language, name, description, isSimpleChange = true } = dto;
+    const { language, name, description, imageCode, isSimpleChange = true } = dto;
     const defaultLang = this.settingService.getDefaultLanguage() as Language;
     const publicLang = this.settingService.getPublicLanguage() as Language;
     if (language === defaultLang && defaultLang !== publicLang) throw new CustomException('common.invalid_request', 'BAD_REQUEST', { messageDetail: '기준 언어는 해당 엔드포인트로 수정 불가능합니다.' });
@@ -541,7 +540,7 @@ export class ProductSettingService {
       let addChangedKeys: ChangedKey[] = [];
       if (!isSimpleChange) {
         await this.findProductTranslationChangedFields(publicDbProduct, dto);
-        const copyDto = JSON.parse(JSON.stringify({ name, description: description ?? '', imageCode: dto.imageCode ?? '' }));
+        const copyDto = JSON.parse(JSON.stringify({ name, description: description ?? '' }));
         changedKeyFind(publicDbProduct, copyDto, this.findKeys);
         addChangedKeys = changeWordFind(copyDto).addChangedKeys;
       }
@@ -573,8 +572,8 @@ export class ProductSettingService {
         }
         await tx.productTranslation.upsert({
           where: { productId_language: { productId: id, language: publicLang } },
-          update: { name, description: description ?? null, imageCode: dto.imageCode || null, isView: dto.isView ?? true, isMatch: true, lastChangedAt: new Date() },
-          create: { productId: id, language: publicLang, name, description: description ?? null, imageCode: dto.imageCode || null, isView: dto.isView ?? true, isMatch: true, lastChangedAt: new Date() },
+          update: { name, description: description ?? null, imageCode: imageCode || null, isView: dto.isView ?? true, isMatch: true, lastChangedAt: new Date() },
+          create: { productId: id, language: publicLang, name, description: description ?? null, imageCode: imageCode || null, isView: dto.isView ?? true, isMatch: true, lastChangedAt: new Date() },
         });
       });
       return 'update product translation success';
@@ -585,7 +584,7 @@ export class ProductSettingService {
   }
 
   async putProductTranslation(id: number, dto: PutProductTranslationReqDto): Promise<string> {
-    const { language, name, description } = dto;
+    const { language, name, description, imageCode } = dto;
     if (language === this.settingService.getDefaultLanguage() as Language || language === this.settingService.getPublicLanguage() as Language) {
       throw new CustomException('common.invalid_request', 'BAD_REQUEST', { messageDetail: '기준언어 및 공용언어는 해당 엔드포인트로 수정 불가능합니다.' });
     }
@@ -606,8 +605,8 @@ export class ProductSettingService {
       await this.prisma.$transaction(async (tx) => {
         await tx.productTranslation.upsert({
           where: { productId_language: { productId: id, language: language as Language } },
-          update: { name, description: description || null, imageCode: dto.imageCode || null, isView: dto.isView ?? true, isMatch: true, lastChangedAt: new Date() },
-          create: { productId: id, language: language as Language, name, description: description ?? null, imageCode: dto.imageCode || null, isView: dto.isView ?? true, isMatch: true, lastChangedAt: new Date() },
+          update: { name, description: description || null, imageCode: imageCode || null, isView: dto.isView ?? true, isMatch: true, lastChangedAt: new Date() },
+          create: { productId: id, language: language as Language, name, description: description ?? null, imageCode: imageCode || null, isView: dto.isView ?? true, isMatch: true, lastChangedAt: new Date() },
         });
         await tx.product.update({ where: { id }, data: { changedKeys: restChangedFields } });
       });

@@ -1,6 +1,11 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, Headers } from '@nestjs/common';
-import { ApiExtraModels, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, Headers, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
+import { ApiBody, ApiConsumes, ApiExtraModels, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
 import { ProductSettingService } from './product-setting.service';
+import { ProductUploadTemplateService } from './product-upload-template.service';
+import { ProductUploadService } from './product-upload.service';
 import { ApiCommonResponse, CommonSetResponseDto } from '@common/dto/common-response.dto';
 import { ApiPaginatedResponse, PaginatedResponseDto } from '@common/dto/pagination.dto';
 import { SetProductReqDto } from './dto/set-product/request.dto';
@@ -20,8 +25,32 @@ import { Public } from '@common/decorators/public.decorator';
 export class ProductSettingController {
   constructor(
     private readonly productSettingService: ProductSettingService,
+    private readonly productUploadTemplateService: ProductUploadTemplateService,
+    private readonly productUploadService: ProductUploadService,
     private readonly settingService: SettingService,
   ) { }
+
+  @Get('/upload-template')
+  @ApiOperation({ summary: '상품 일괄등록 엑셀 템플릿 다운로드' })
+  async getUploadTemplate(@Res() res: Response): Promise<void> {
+    const buffer = await this.productUploadTemplateService.generateTemplate();
+    const filename = encodeURIComponent('상품_업로드_템플릿.xlsx');
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': `attachment; filename*=UTF-8''${filename}`,
+    });
+    res.end(buffer);
+  }
+
+  @Post('/upload')
+  @ApiOperation({ summary: '상품 일괄등록 엑셀 업로드' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
+  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  async uploadProducts(@UploadedFile() file: Express.Multer.File): Promise<{ total: number; success: number; errors: { row: number; message: string }[] }> {
+    if (!file) throw new Error('파일을 첨부해 주세요.');
+    return this.productUploadService.uploadProducts(file.buffer);
+  }
 
   @Get('/list')
   @ApiOperation({ summary: '상품 목록 조회' })
