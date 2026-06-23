@@ -9,4 +9,14 @@ export const POLICY_ERROR_MESSAGE = {
     ru: 'Политика не найдена.',
     th: 'ไม่พบนโยบาย.',
   },
+  'policy.note.required': {
+    ko: '내용을 입력해주세요.',
+    ja: '内容を入力してください。',
+    zhCN: '请输入内容。',
+    zhTW: '請輸入內容。',
+    en: 'Content is required.',
+    vi: 'Vui lòng nhập nội dung.',
+    ru: 'Введите содержание.',
+    th: 'กรุณากรอกเนื้อหา.',
+  },
 };

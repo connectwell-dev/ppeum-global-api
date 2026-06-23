@@ -2,23 +2,41 @@ import { Injectable } from '@nestjs/common';
 import { CustomException } from '@src/common/exceptions';
 import { formatLocalYmdHms } from '@src/common/utils/date-format';
 import { PrismaService } from '@src/core/prisma/prisma.service';
+import { S3Service } from '@src/core/s3/s3.service';
 
 @Injectable()
 export class BasicPopupSettingService {
 
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly s3Service: S3Service,
+  ) { }
+
+  private async findBasicPopupOrThrow(popupBasicId: number) {
+    const popup = await this.prisma.popupBasic.findFirst({
+      where: { id: popupBasicId, deletedAt: null },
+    });
+    if (!popup) {
+      throw new CustomException('basic-popup.not_found', 'BAD_REQUEST', { field: 'id', fieldMessage: 'basic-popup.not_found' });
+    }
+    return popup;
+  }
 
   async getBasicPopupList() {
     try {
-      return await this.prisma.popupBasic.findMany({
-        where: { deletedAt: null },
-        select: {
-          id: true,
-          language: true
-          // type: true
-        },
-        orderBy: { language: 'asc' }
-      });
+      const [total, popupBasic] = await Promise.all([
+        this.prisma.popupBasic.count({ where: { deletedAt: null } }),
+        this.prisma.popupBasic.findMany({
+          where: { deletedAt: null },
+          select: {
+            id: true,
+            language: true,
+            type: true
+          },
+          orderBy: { language: 'asc' }
+        })
+      ])
+      return { total, popupBasic };
     } catch (error) {
       if (error instanceof CustomException) throw error;
       throw new CustomException();
@@ -36,6 +54,7 @@ export class BasicPopupSettingService {
           startTime: true,
           endAt: true,
           endTime: true,
+          type: true,
           images: {
             select: {
               path: true
@@ -49,7 +68,7 @@ export class BasicPopupSettingService {
       }
 
       const basicPopupCreatedDates = await this.prisma.popupBasic.findMany({
-        where: { language: basicPopup.language, deletedAt: null, /** type: basicPopup.type */ },
+        where: { language: basicPopup.language, deletedAt: null, type: basicPopup.type },
         select: {
           id: true,
           createdAt: true
@@ -63,6 +82,20 @@ export class BasicPopupSettingService {
       })
       return { ...basicPopup, createdDates: mapData };
 
+    } catch (error) {
+      if (error instanceof CustomException) throw error;
+      throw new CustomException();
+    }
+  }
+  
+  async setBasicPopupImage(popupBasicId: number, file: Express.Multer.File) {
+    try {
+      await this.findBasicPopupOrThrow(popupBasicId);
+
+      const s3Key = await this.s3Service.upload(file, 'popup-basic');
+      await this.prisma.popupBasicImage.create({
+        data: { popupBasicId, path: s3Key },
+      });
     } catch (error) {
       if (error instanceof CustomException) throw error;
       throw new CustomException();
