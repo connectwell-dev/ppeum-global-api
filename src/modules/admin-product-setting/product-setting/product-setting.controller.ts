@@ -10,7 +10,7 @@ import { ApiCommonResponse, CommonSetResponseDto } from '@common/dto/common-resp
 import { ApiPaginatedResponse, PaginatedResponseDto } from '@common/dto/pagination.dto';
 import { SetProductReqDto } from './dto/set-product/request.dto';
 import { PutProductReqDto, PutProductTranslationReqDto, PutProductPublicTranslationReqDto } from './dto/put-product/request.dto';
-import { GetProductEventListResDto } from '../product-event-setting/dto/get-product-event/response.dto';
+import { GetProductCategoryListResDto } from '../product-category-setting/dto/get-product-category/response.dto';
 import { GetProductListReqDto } from './dto/get-product/query.dto';
 import { GetProductDetailResDto, GetProductListResDto, GetProductTranslationResDto } from './dto/get-product/response.dto';
 import { Language } from '@prisma/client';
@@ -73,11 +73,11 @@ export class ProductSettingController {
     return this.productSettingService.getProductTranslation(id, dto.language as Language, headerLang as Language);
   }
 
-  @Get('/:id/product-event-list')
-  @ApiOperation({ summary: '상품 연결된 이벤트 목록 조회' })
-  @ApiCommonResponse(GetProductEventListResDto, { isArray: true, status: 200 })
-  async getProductEventList(@Param('id') id: number, @Headers('lang') headerLang: string): Promise<GetProductEventListResDto[]> {
-    return this.productSettingService.getProductEventList(id, headerLang as Language);
+  @Get('/:id/product-category-list')
+  @ApiOperation({ summary: '상품 연결된 카테고리 목록 조회' })
+  @ApiCommonResponse(GetProductCategoryListResDto, { isArray: true, status: 200 })
+  async getProductCategoryList(@Param('id') id: number, @Headers('lang') headerLang: string): Promise<GetProductCategoryListResDto[]> {
+    return this.productSettingService.getProductCategoryList(id, headerLang as Language);
   }
 
   @Post('/')

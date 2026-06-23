@@ -35,11 +35,6 @@ export class SetProductTranslationDto {
 }
 
 export class SetProductReqDto {
-  @ApiProperty({ description: '상품 분류 ID', example: 1, required: false })
-  @IsOptional()
-  @IsNumber()
-  productCategoryId: number;
-
   @ApiProperty({ description: '상품 금액', example: 100000 })
   @IsNumber()
   @IsNotEmpty()
@@ -67,10 +62,10 @@ export class SetProductReqDto {
   @IsNotEmpty()
   isActive: boolean;
 
-  @ApiProperty({ description: '연결 시술설명 ID (OperationInfo)', example: 1, required: false })
+  @ApiProperty({ description: '연결 상세페이지 ID', example: 1, required: false })
   @IsOptional()
   @IsNumber()
-  operationInfoId?: number;
+  productDetailInfoId?: number;
 
   @ApiProperty({ description: '언어별 상품명 목록', type: [SetProductTranslationDto], required: false })
   @IsOptional()

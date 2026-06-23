@@ -1,5 +1,5 @@
 enum GeneralImageType {
-  operation_info // 수술정보
+  product_detail_info // 상세페이지
   event // 이벤트
   product // 상품
 }
@@ -18,11 +18,11 @@ model GeneralInfo {
 
 model GeneralImageCategory {
   id        Int               @id @default(autoincrement())
-  name      String            @db.VarChar(50) // 항목 명
-  type      GeneralImageType? @map("type") // 이미지 타입
-  createdAt DateTime          @default(now()) @map("created_at") // 생성일시
-  updatedAt DateTime          @default(now()) @updatedAt @map("updated_at") // 수정일시
-  deletedAt DateTime?         @map("deleted_at") // 삭제일시
+  name      String            @db.VarChar(50)
+  type      GeneralImageType? @map("type")
+  createdAt DateTime          @default(now()) @map("created_at")
+  updatedAt DateTime          @default(now()) @updatedAt @map("updated_at")
+  deletedAt DateTime?         @map("deleted_at")
 
   generalImages GeneralImage[]
 
@@ -30,18 +30,18 @@ model GeneralImageCategory {
 }
 
 model GeneralImage {
-  code            String    @id @default(dbgenerated("generate_custom_id('IMG')")) @map("code") // 고유 id
-  imageCategoryId Int       @map("image_category_id") // 이미지 카테고리 아이디
-  name            String    @db.VarChar(50) // 항목 명
-  path            String    @db.VarChar(255) // 이미지 path
-  createdAt       DateTime  @default(now()) @map("created_at") // 생성일시
-  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") // 수정일시
-  deletedAt       DateTime? @map("deleted_at") // 삭제일시
+  code            String    @id @default(dbgenerated("generate_custom_id('IMG')")) @map("code")
+  imageCategoryId Int       @map("image_category_id")
+  name            String    @db.VarChar(50)
+  path            String    @db.VarChar(255)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
 
-  imageCategory             GeneralImageCategory       @relation(fields: [imageCategoryId], references: [id], onDelete: Cascade)
-  productTranslations       ProductTranslation[]
-  productEventTranslations  ProductEventTranslation[]
-  operationInfoTranslations OperationInfoTranslation[]
+  imageCategory                  GeneralImageCategory         @relation(fields: [imageCategoryId], references: [id], onDelete: Cascade)
+  productTranslations            ProductTranslation[]
+  productCategoryTranslations    ProductCategoryTranslation[]
+  productDetailInfoTranslations  ProductDetailInfoTranslation[]
 
   @@map("general_image")
 }

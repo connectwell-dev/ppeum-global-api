@@ -1,0 +1,37 @@
+// 상세페이지 정보 (상품에 매칭)
+model ProductDetailInfo {
+  id          Int       @id @default(autoincrement())
+  code        String    @unique @default(dbgenerated("generate_custom_id('DTL')")) @map("code")
+  changedKeys Json[]    @default([]) @map("changed_keys")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  productDetailInfoTranslations ProductDetailInfoTranslation[]
+  products                      Product[]
+
+  @@map("product_detail_info")
+}
+
+model ProductDetailInfoTranslation {
+  productDetailInfoId Int       @map("product_detail_info_id")
+  language            Language  @default(ja)
+  title               String?   @db.VarChar(512)
+  description         String?   @db.Text
+  shortDescription    Json[]    @default([]) @db.Json
+  imageCode           String?   @map("image_code")
+  hashtag             String[]  @default([]) @db.Text
+  caution             String[]  @default([]) @db.Text
+  note                String?   @db.Text
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @default(now()) @updatedAt @map("updated_at")
+  isMatch             Boolean   @default(false) @map("is_match")
+  lastChangedAt       DateTime? @default(now()) @map("last_changed_at")
+
+  productDetailInfo ProductDetailInfo? @relation(fields: [productDetailInfoId], references: [id], onDelete: Cascade)
+  image             GeneralImage?      @relation(fields: [imageCode], references: [code], onDelete: SetNull)
+
+  @@id([productDetailInfoId, language])
+  @@index([language])
+  @@map("product_detail_info_translation")
+}

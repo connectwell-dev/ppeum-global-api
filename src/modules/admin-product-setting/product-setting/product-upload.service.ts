@@ -11,7 +11,7 @@ interface ParsedProduct {
   eventPrice: number | null;
   startDate: string | null;
   endDate: string | null;
-  operationInfoCode: string | null;
+  productDetailInfoCode: string | null;
   translations: {
     language: Language;
     name: string | null;
@@ -72,11 +72,11 @@ export class ProductUploadService {
     const groupCodeCol = colMap['분류코드'] ?? 0;
 
     // 참조 데이터 로드
-    const opInfoMap = new Map<string, number>();
-    const opInfos = await this.prisma.operationInfo.findMany({
+    const detailInfoMap = new Map<string, number>();
+    const detailInfos = await this.prisma.productDetailInfo.findMany({
       where: { deletedAt: null }, select: { id: true, code: true },
     });
-    for (const info of opInfos) opInfoMap.set(info.code, info.id);
+    for (const info of detailInfos) detailInfoMap.set(info.code, info.id);
 
     // ── 1단계: 파싱 + 검증 ──
     const parsed: { rowNum: number; data: ParsedProduct }[] = [];
@@ -99,7 +99,7 @@ export class ProductUploadService {
       if (eventPriceRaw && isNaN(eventPrice as number)) rowErrors.push('이벤트가는 숫자여야 합니다.');
 
       const opCode = this.cellVal(row, opCodeCol) || null;
-      if (opCode && !opInfoMap.has(opCode)) rowErrors.push(`상세페이지코드 "${opCode}"가 존재하지 않습니다.`);
+      if (opCode && !detailInfoMap.has(opCode)) rowErrors.push(`상세페이지코드 "${opCode}"가 존재하지 않습니다.`);
 
       if (rowErrors.length > 0) {
         errors.push({ row: rowNumber, message: rowErrors.join(' / ') });
@@ -127,7 +127,7 @@ export class ProductUploadService {
           eventPrice,
           startDate: this.cellVal(row, startDateCol) || null,
           endDate: this.cellVal(row, endDateCol) || null,
-          operationInfoCode: opCode,
+          productDetailInfoCode: opCode,
           translations,
         },
       });
@@ -173,9 +173,9 @@ export class ProductUploadService {
     // ── 2단계: 전체 검증 통과 → 일괄 등록 ──
     await this.prisma.$transaction(async (tx) => {
       for (const item of parsed) {
-        let operationInfoId: number | null = null;
-        if (item.data.operationInfoCode) {
-          operationInfoId = opInfoMap.get(item.data.operationInfoCode) ?? null;
+        let productDetailInfoId: number | null = null;
+        if (item.data.productDetailInfoCode) {
+          productDetailInfoId = detailInfoMap.get(item.data.productDetailInfoCode) ?? null;
         }
 
         const product = await tx.product.create({
@@ -185,7 +185,7 @@ export class ProductUploadService {
             startDate: item.data.startDate,
             endDate: item.data.endDate,
             isActive: true,
-            operationInfoId,
+            productDetailInfoId,
             changedKeys: [],
           },
         });

@@ -25,12 +25,6 @@ export class GetProductDetailResDto {
   @ApiProperty({ example: '상품 설명', description: '상품 설명', required: false })
   productDescription: string;
 
-  @ApiProperty({ example: '분류명', description: '분류명', required: false })
-  productCategoryName: string;
-
-  @ApiProperty({ example: 1, description: '상품 분류 ID', required: false })
-  productCategoryId: number;
-
   @ApiProperty({ example: 100000, description: '상품 금액' })
   productPrice: number;
 
@@ -52,11 +46,11 @@ export class GetProductDetailResDto {
   @ApiProperty({ example: true, description: '기준언어 노출 여부' })
   isView: boolean;
 
-  @ApiProperty({ example: 1, description: '연결 시술설명 ID (OperationInfo)', nullable: true })
-  operationInfoId: number | null;
+  @ApiProperty({ example: 1, description: '연결 상세페이지 ID', nullable: true })
+  productDetailInfoId: number | null;
 
-  @ApiProperty({ example: '리프팅 시술 설명', description: '연결 시술설명 타이틀 (요청 언어)', nullable: true })
-  operationInfoTitle: string | null;
+  @ApiProperty({ example: '리프팅 상세페이지', description: '연결 상세페이지 타이틀 (요청 언어)', nullable: true })
+  productDetailInfoTitle: string | null;
 
   @ApiProperty({ example: '2026-01-01', description: '생성일시' })
   createdAt: Date;
@@ -105,9 +99,6 @@ export class GetProductListResDto {
 
   @ApiProperty({ example: 'PR001', description: '상품 코드' })
   code: string;
-
-  @ApiProperty({ example: '분류명', description: '분류명', required: false })
-  categoryName: string;
 
   @ApiProperty({ example: '상품명', description: '상품명 (요청 언어)' })
   name: string;

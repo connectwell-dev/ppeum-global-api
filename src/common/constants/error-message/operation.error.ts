@@ -64,17 +64,6 @@ export const OPERATION_ERROR_MESSAGE = {
     th: 'ชื่อหมวดหมู่เวลาซ้ำกัน.',
   },
 
-  'operation.info.title.duplicate': {
-    ko: '시술 정보명이 중복되었습니다.',
-    ja: '時間情報名が重複しました。',
-    zhCN: '时间信息名重复。',
-    zhTW: '時間信息名重複。',
-    en: 'Operation info title duplicate.',
-    vi: 'Tên thông tin thời gian trùng lặp.',
-    ru: 'Название информации о времени дублируется.',
-    th: 'ชื่อข้อมู่เวลาซ้ำกัน.',
-  },
-
   'operation.create.failed': {
     ko: '시술 생성에 실패했습니다.',
     ja: '時間作成に失敗しました。',
@@ -106,17 +95,6 @@ export const OPERATION_ERROR_MESSAGE = {
     vi: 'Tên dịch thời gian không thay đổi.',
     ru: 'Название перевода времени не изменилось.',
     th: 'ชื่อการแปลเวลาไม่ได้เปลี่ยนแปลง.',
-  },
-
-  'operation.info.not_found': {
-    ko: '시술 정보를 찾을 수 없습니다.',
-    ja: '時間情報を見つけることができません。',
-    zhCN: '时间信息找不到。',
-    zhTW: '時間信息找不到。',
-    en: 'Operation info not found.',
-    vi: 'Không tìm thấy thông tin thời gian.',
-    ru: 'Информация о времени не найдена.',
-    th: 'ไม่พบข้อมู่เวลา.',
   },
 
   'operation.remaining.not_found': {

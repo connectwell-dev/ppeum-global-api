@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsBoolean, IsNotEmpty, IsNumber, ValidateNested } from 'class-validator';
+import { IsArray, IsNotEmpty, IsNumber, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export class PatchProductCategoryItemDto {
-  @ApiProperty({ description: '분류 ID', example: 1 })
+export class PatchProductCategoryOrderItemDto {
+  @ApiProperty({ description: '카테고리 ID', example: 1 })
   @IsNumber()
   @IsNotEmpty()
   id: number;
@@ -12,18 +12,13 @@ export class PatchProductCategoryItemDto {
   @IsNumber()
   @IsNotEmpty()
   order: number;
-
-  @ApiProperty({ description: '사용 여부', example: true })
-  @IsBoolean()
-  @IsNotEmpty()
-  isActive: boolean;
 }
 
-export class PatchProductCategoryStatusReqDto {
-  @ApiProperty({ description: '분류 순서/사용여부 일괄 수정 목록', type: [PatchProductCategoryItemDto] })
+export class PatchProductCategoryOrderReqDto {
+  @ApiProperty({ description: '카테고리 순서 일괄 수정 목록', type: [PatchProductCategoryOrderItemDto] })
   @IsArray()
   @IsNotEmpty()
   @ValidateNested({ each: true })
-  @Type(() => PatchProductCategoryItemDto)
-  items: PatchProductCategoryItemDto[];
+  @Type(() => PatchProductCategoryOrderItemDto)
+  items: PatchProductCategoryOrderItemDto[];
 }

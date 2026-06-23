@@ -5,8 +5,6 @@ import { ProductUploadTemplateService } from './product-setting/product-upload-t
 import { ProductUploadService } from './product-setting/product-upload.service';
 import { ProductCategorySettingController } from './product-category-setting/product-category-setting.controller';
 import { ProductCategorySettingService } from './product-category-setting/product-category-setting.service';
-import { ProductEventSettingController } from './product-event-setting/product-event-setting.controller';
-import { ProductEventSettingService } from './product-event-setting/product-event-setting.service';
 import { ProductGroupSettingController } from './product-group-setting/product-group-setting.controller';
 import { ProductGroupSettingService } from './product-group-setting/product-group-setting.service';
 
@@ -15,7 +13,6 @@ import { ProductGroupSettingService } from './product-group-setting/product-grou
   controllers: [
     ProductSettingController,
     ProductCategorySettingController,
-    ProductEventSettingController,
     ProductGroupSettingController,
   ],
   providers: [
@@ -23,7 +20,6 @@ import { ProductGroupSettingService } from './product-group-setting/product-grou
     ProductUploadTemplateService,
     ProductUploadService,
     ProductCategorySettingService,
-    ProductEventSettingService,
     ProductGroupSettingService,
   ],
   exports: [],
