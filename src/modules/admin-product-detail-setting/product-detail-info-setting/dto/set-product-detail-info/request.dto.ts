@@ -14,7 +14,7 @@ export class ShortDescriptionItemDto {
   value: string;
 }
 
-// 기준언어(ja) - title, description 필수
+// 기준언어(ko) - title, description 필수
 export class SetProductDetailInfoDefaultTranslationDto {
   @ApiProperty({ description: '타이틀', example: '립 필러' })
   @IsString()
@@ -30,11 +30,11 @@ export class SetProductDetailInfoDefaultTranslationDto {
     description: '상세페이지 설명 2 (key는 고정값 사용)',
     type: [ShortDescriptionItemDto],
     example: [
-      { key: '麻酔時間', value: '約30分' },
-      { key: '手術時間', value: '約1時間' },
-      { key: '回復期間', value: '約1週間' },
-      { key: '持続期間', value: '約6ヶ月' },
-      { key: '再手術周期', value: '約1年' },
+      { key: '마취시간', value: '약 30분' },
+      { key: '시술시간', value: '약 1시간' },
+      { key: '회복기간', value: '약 1주일' },
+      { key: '유지시간', value: '약 6개월' },
+      { key: '재시술주기', value: '약 1년' },
     ],
     required: false,
   })
@@ -131,16 +131,16 @@ export class SetProductDetailInfoTranslationDto {
 }
 
 export class SetProductDetailInfoReqDto {
-  @ApiProperty({ description: '기준언어 (ja) - title, description 필수', type: SetProductDetailInfoDefaultTranslationDto })
+  @ApiProperty({ description: '기준언어 (ko) - title, description 필수', type: SetProductDetailInfoDefaultTranslationDto })
   @ValidateNested()
   @Type(() => SetProductDetailInfoDefaultTranslationDto)
-  ja: SetProductDetailInfoDefaultTranslationDto;
+  ko: SetProductDetailInfoDefaultTranslationDto;
 
-  @ApiProperty({ description: '한국어 공용언어 (ko)', type: SetProductDetailInfoTranslationDto, required: false })
+  @ApiProperty({ description: '일본어 (ja)', type: SetProductDetailInfoTranslationDto, required: false })
   @IsOptional()
   @ValidateNested()
   @Type(() => SetProductDetailInfoTranslationDto)
-  ko?: SetProductDetailInfoTranslationDto;
+  ja?: SetProductDetailInfoTranslationDto;
 
   @ApiProperty({ description: '영어 (en)', type: SetProductDetailInfoTranslationDto, required: false })
   @IsOptional()

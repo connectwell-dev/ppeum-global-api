@@ -3,7 +3,7 @@ import { IsBoolean, IsEnum, IsNotEmpty, IsOptional } from 'class-validator';
 import { Language } from '@prisma/client';
 import { SetProductDetailInfoDefaultTranslationDto, SetProductDetailInfoTranslationDto } from '../set-product-detail-info/request.dto';
 
-// 기준언어(ja) 수정 - title, description 필수
+// 기준언어(ko) 수정 - title, description 필수
 export class PutProductDetailInfoReqDto extends SetProductDetailInfoDefaultTranslationDto {
   @ApiProperty({ description: '단순변경 여부 (false 시 타 언어 재번역 대상으로 지정)', example: false })
   @IsBoolean()

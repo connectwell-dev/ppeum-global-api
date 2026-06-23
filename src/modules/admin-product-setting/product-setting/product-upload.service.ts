@@ -53,13 +53,12 @@ export class ProductUploadService {
       if (val) colMap[val] = colNumber;
     });
 
-    const langColMap: Record<string, { name: number; desc: number; image: number; view: number }> = {};
+    const langColMap: Record<string, { name: number; desc: number; view: number }> = {};
     for (const l of langs) {
       const label = this.getLangDisplay(l);
       langColMap[l] = {
         name: colMap[`상품명-${label}`] ?? 0,
         desc: colMap[`상품설명-${label}`] ?? 0,
-        image: colMap[`이미지코드-${label}`] ?? 0,
         view: colMap[`노출여부-${label}`] ?? 0,
       };
     }
@@ -70,6 +69,7 @@ export class ProductUploadService {
     const endDateCol = colMap['상품노출 종료일'] ?? 0;
     const opCodeCol = colMap['상세페이지코드'] ?? 0;
     const groupCodeCol = colMap['분류코드'] ?? 0;
+    const imageCodeCol = colMap['이미지코드'] ?? 0;
 
     // 참조 데이터 로드
     const detailInfoMap = new Map<string, number>();
@@ -106,6 +106,7 @@ export class ProductUploadService {
         return;
       }
 
+      const imageCode = this.cellVal(row, imageCodeCol) || null;
       const translations: ParsedProduct['translations'] = [];
       for (const l of langs) {
         const cols = langColMap[l];
@@ -114,7 +115,7 @@ export class ProductUploadService {
           language: l as Language,
           name: this.cellVal(row, cols.name) || null,
           description: this.cellVal(row, cols.desc) || null,
-          imageCode: this.cellVal(row, cols.image) || null,
+          imageCode,
           isView: this.cellVal(row, cols.view)?.toUpperCase() !== 'N',
         });
       }

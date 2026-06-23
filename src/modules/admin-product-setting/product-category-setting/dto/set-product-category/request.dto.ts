@@ -14,7 +14,7 @@ import { Language, ProductCategoryType, WeekDayType } from '@prisma/client';
 import { EmptyToCustomValue } from '@common/decorators/empty-to-custom-value';
 
 export class ProductCategoryTranslationDto {
-  @ApiProperty({ description: '언어', example: 'ja', enum: Language })
+  @ApiProperty({ description: '언어', example: 'ko', enum: Language })
   @IsEnum(Language)
   @IsNotEmpty()
   language: Language;

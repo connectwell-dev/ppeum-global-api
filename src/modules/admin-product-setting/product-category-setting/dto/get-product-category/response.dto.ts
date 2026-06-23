@@ -13,7 +13,7 @@ export class CategoryImageResDto {
 }
 
 export class ProductCategoryTranslationResDto {
-  @ApiProperty({ example: 'ja', enum: Language, description: '언어' })
+  @ApiProperty({ example: 'ko', enum: Language, description: '언어' })
   language: Language;
 
   @ApiProperty({ example: '카테고리명', description: '카테고리명' })

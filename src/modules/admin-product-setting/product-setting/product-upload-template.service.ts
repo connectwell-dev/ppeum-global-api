@@ -56,7 +56,7 @@ export class ProductUploadTemplateService {
     const wb = new ExcelJS.Workbook();
     const ws = wb.addWorksheet('상품 업로드');
 
-    // ── 컬럼 순서: 공통 → 언어별(상품명, 설명, 이미지코드, 노출여부) ──
+    // ── 컬럼 순서: 공통 → 언어별(상품명, 설명, 노출여부) → 이미지코드(1개) ──
     const headers: { header: string; key: string; width: number }[] = [
       { header: '분류코드', key: 'groupCode', width: 22 },
       { header: '정상가', key: 'price', width: 12 },
@@ -67,8 +67,8 @@ export class ProductUploadTemplateService {
     ];
     for (const l of langs) headers.push({ header: `상품명-${LANG_DISPLAY[l] ?? l}`, key: `name_${l}`, width: 24 });
     for (const l of langs) headers.push({ header: `상품설명-${LANG_DISPLAY[l] ?? l}`, key: `desc_${l}`, width: 30 });
-    for (const l of langs) headers.push({ header: `이미지코드-${LANG_DISPLAY[l] ?? l}`, key: `image_${l}`, width: 22 });
     for (const l of langs) headers.push({ header: `노출여부-${LANG_DISPLAY[l] ?? l}`, key: `view_${l}`, width: 14 });
+    headers.push({ header: '이미지코드', key: 'imageCode', width: 22 });
 
     ws.columns = headers;
 
@@ -106,9 +106,9 @@ export class ProductUploadTemplateService {
         const names = SAMPLE_NAMES[l] ?? SAMPLE_NAMES['en'];
         row[`name_${l}`] = names[i] ?? `상품 ${i + 1}`;
         row[`desc_${l}`] = i < 3 ? `${names[i] ?? ''} 설명` : '';
-        row[`image_${l}`] = l === langs[0] && i < 3 ? `IMG0000000${i + 1}` : '';
         row[`view_${l}`] = 'Y';
       }
+      row['imageCode'] = i < 3 ? `IMG0000000${i + 1}` : '';
       ws.addRow(row);
     }
 
@@ -136,8 +136,8 @@ export class ProductUploadTemplateService {
       }
     }
 
-    // 노출여부 드롭다운 (Y/N) — 공통6 + 상품명(langs) + 상품설명(langs) + 이미지코드(langs) 뒤
-    const viewColStart = 6 + langs.length * 3 + 1;
+    // 노출여부 드롭다운 (Y/N) — 공통6 + 상품명(langs) + 상품설명(langs) 뒤
+    const viewColStart = 6 + langs.length * 2 + 1;
     for (let li = 0; li < langs.length; li++) {
       const col = viewColStart + li;
       for (let r = 2; r <= 200; r++) {
