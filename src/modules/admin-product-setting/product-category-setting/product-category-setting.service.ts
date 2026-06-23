@@ -13,9 +13,6 @@ import { GetProductCategoryDetailResDto, GetProductCategoryListResDto, GetProduc
 import { SetProductCategoryReqDto } from './dto/set-product-category/request.dto';
 import { PutProductCategoryReqDto, PutProductCategoryPublicTranslationReqDto, PutProductCategoryTranslationReqDto } from './dto/put-product-category/request.dto';
 import { PatchProductCategoryOrderReqDto } from './dto/patch-product-category/request.dto';
-import { SetCategoryProductsReqDto } from './dto/set-product-category-products/request.dto';
-import { PutCategoryProductReqDto } from './dto/put-product-category-products/request.dto';
-import { DeleteCategoryProductsReqDto } from './dto/delete-product-category-products/request.dto';
 import { OrderHelper } from '@src/core/helpers/order.helper';
 import { pickTranslation } from '@common/utils/translation-utils';
 @Injectable()
@@ -131,13 +128,28 @@ export class ProductCategorySettingService {
 
   // ────────── 카테고리 상세 ──────────
 
-  async getProductCategoryDetail(id: number): Promise<GetProductCategoryDetailResDto> {
+  async getProductCategoryDetail(id: number, headerLang: Language): Promise<GetProductCategoryDetailResDto> {
     try {
+      const defaultLang = this.settingService.getDefaultLanguage() as Language;
+
       const category = await this.prisma.productCategory.findUnique({
         where: { id, deletedAt: null },
         include: {
           productCategoryTranslations: {
             select: { language: true, name: true, imageCode: true, image: { select: { code: true, name: true, path: true } }, isMatch: true, lastChangedAt: true },
+          },
+          productToProductCategories: {
+            include: {
+              product: {
+                include: {
+                  productTranslations: {
+                    where: { language: { in: [headerLang, defaultLang] } },
+                    select: { language: true, name: true, isView: true },
+                  },
+                },
+              },
+            },
+            orderBy: { order: 'asc' },
           },
         },
       });
@@ -145,8 +157,23 @@ export class ProductCategorySettingService {
       if (!category) {
         throw new CustomException('common.not_found', 'BAD_REQUEST', { field: 'id', fieldMessage: 'common.not_found' });
       }
-      const defaultLang = this.settingService.getDefaultLanguage() as Language;
       const defaultTranslation = category.productCategoryTranslations.find((t) => t.language === defaultLang);
+
+      const products = category.productToProductCategories.map((link) => {
+        const headerTranslation = link.product?.productTranslations?.find((t) => t.language === headerLang && t.isView);
+        const defaultProductTranslation = link.product?.productTranslations?.find((t) => t.language === defaultLang);
+        const name = headerTranslation?.name ?? defaultProductTranslation?.name ?? '';
+
+        return {
+          productId: link.productId,
+          name,
+          productPrice: link.product?.productPrice ?? 0,
+          eventPrice: link.product?.eventPrice ?? null,
+          promotionPrice: link.promotionPrice,
+          eventDiscountPercent: link.eventDiscountPercent,
+          order: link.order,
+        };
+      });
 
       return {
         id: category.id,
@@ -162,6 +189,7 @@ export class ProductCategorySettingService {
         weekDay: category.weekDay,
         createdAt: category.createdAt,
         updatedAt: category.updatedAt,
+        products,
       } as any;
     } catch (error) {
       if (error instanceof CustomException) throw error;
@@ -180,7 +208,20 @@ export class ProductCategorySettingService {
         select: {
           changedKeys: true,
           productCategoryTranslations: {
-            select: { language: true, name: true, imageCode: true, isMatch: true, lastChangedAt: true, image: { select: { code: true, name: true, path: true } } },
+            select: { language: true, name: true, imageCode: true, isView: true, isMatch: true, lastChangedAt: true, image: { select: { code: true, name: true, path: true } } },
+          },
+          productToProductCategories: {
+            include: {
+              product: {
+                include: {
+                  productTranslations: {
+                    where: { language: { in: [language, defaultLang] } },
+                    select: { language: true, name: true, isView: true },
+                  },
+                },
+              },
+            },
+            orderBy: { order: 'asc' },
           },
         },
       });
@@ -216,12 +257,35 @@ export class ProductCategorySettingService {
         }
       }
 
+      const products = category.productToProductCategories
+        .filter((link) => {
+          const langTranslation = link.product?.productTranslations?.find((t) => t.language === language);
+          return langTranslation ? langTranslation.isView : true;
+        })
+        .map((link) => {
+          const langTranslation = link.product?.productTranslations?.find((t) => t.language === language && t.isView);
+          const defaultProductTranslation = link.product?.productTranslations?.find((t) => t.language === defaultLang);
+          const name = langTranslation?.name ?? defaultProductTranslation?.name ?? '';
+
+          return {
+            productId: link.productId,
+            name,
+            productPrice: link.product?.productPrice ?? 0,
+            eventPrice: link.product?.eventPrice ?? null,
+            promotionPrice: link.promotionPrice,
+            eventDiscountPercent: link.eventDiscountPercent,
+            order: link.order,
+          };
+        });
+
       return {
         name: targetTranslation?.name ?? '',
         image: targetTranslation?.image ?? null,
+        isView: targetTranslation?.isView ?? true,
         originName: originName ?? '',
         originImage: originImage ?? null,
         notMatchKeys,
+        products,
       };
     } catch (error) {
       if (error instanceof CustomException) throw error;
@@ -269,12 +333,27 @@ export class ProductCategorySettingService {
                 language: transData.language,
                 name: transData.name || null,
                 imageCode: transData.imageCode || null,
+                isView: transData.isView ?? true,
                 isMatch: (notMatchKeys.length === 0),
                 lastChangedAt: new Date(),
               },
             });
           }
+        }
 
+        if (dto.products && dto.products.length > 0) {
+          for (const [index, p] of dto.products.entries()) {
+            await tx.productToProductCategory.create({
+              data: {
+                productId: p.productId,
+                productCategoryId: created.id,
+                promotionPrice: p.promotionPrice ?? null,
+                eventDiscountPercent: 0,
+                order: p.order ?? (index + 1),
+                isActive: true,
+              },
+            });
+          }
         }
 
         return created;
@@ -366,6 +445,22 @@ export class ProductCategorySettingService {
         });
         const newChangedKeys = dbCategory.changedKeys.filter((k: ChangedKey) => new Date(k.changedAt) > new Date(minLastChangedAt?.lastChangedAt ?? 0));
         await tx.productCategory.update({ where: { id }, data: { changedKeys: newChangedKeys } });
+
+        if (dto.products !== undefined) {
+          await tx.productToProductCategory.deleteMany({ where: { productCategoryId: id } });
+          for (const [index, p] of dto.products.entries()) {
+            await tx.productToProductCategory.create({
+              data: {
+                productId: p.productId,
+                productCategoryId: id,
+                promotionPrice: p.promotionPrice ?? null,
+                eventDiscountPercent: 0,
+                order: p.order ?? (index + 1),
+                isActive: true,
+              },
+            });
+          }
+        }
       });
 
       return 'update product category success';
@@ -482,8 +577,8 @@ export class ProductCategorySettingService {
         }
         await tx.productCategoryTranslation.upsert({
           where: { productCategoryId_language: { productCategoryId: id, language: publicLang } },
-          update: { name, imageCode: dto.imageCode || null, isMatch: true, lastChangedAt: new Date() },
-          create: { productCategoryId: id, language: publicLang, name, imageCode: dto.imageCode || null, isMatch: true, lastChangedAt: new Date() },
+          update: { name, imageCode: dto.imageCode || null, ...(dto.isView !== undefined ? { isView: dto.isView } : {}), isMatch: true, lastChangedAt: new Date() },
+          create: { productCategoryId: id, language: publicLang, name, imageCode: dto.imageCode || null, isView: dto.isView ?? true, isMatch: true, lastChangedAt: new Date() },
         });
       });
       return 'update product category translation success';
@@ -519,8 +614,8 @@ export class ProductCategorySettingService {
       await this.prisma.$transaction(async (tx) => {
         await tx.productCategoryTranslation.upsert({
           where: { productCategoryId_language: { productCategoryId: id, language: language as Language } },
-          update: { name, imageCode: dto.imageCode || null, isMatch: true, lastChangedAt: new Date() },
-          create: { productCategoryId: id, language: language as Language, name, imageCode: dto.imageCode || null, isMatch: true, lastChangedAt: new Date() },
+          update: { name, imageCode: dto.imageCode || null, ...(dto.isView !== undefined ? { isView: dto.isView } : {}), isMatch: true, lastChangedAt: new Date() },
+          create: { productCategoryId: id, language: language as Language, name, imageCode: dto.imageCode || null, isView: dto.isView ?? true, isMatch: true, lastChangedAt: new Date() },
         });
         await tx.productCategory.update({ where: { id }, data: { changedKeys: restChangedFields } });
       });
@@ -586,167 +681,4 @@ export class ProductCategorySettingService {
     }
   }
 
-  // ────────── 카테고리 상품 ──────────
-
-  async getCategoryProductList(categoryId: number, headerLang: Language): Promise<any[]> {
-    try {
-      const defaultLang = this.settingService.getDefaultLanguage() as Language;
-      const category = await this.prisma.productCategory.findUnique({ where: { id: categoryId } });
-      if (!category) throw new CustomException('common.not_found', 'BAD_REQUEST', { field: 'categoryId', fieldMessage: 'common.not_found' });
-
-      const links = await this.prisma.productToProductCategory.findMany({
-        where: { productCategoryId: categoryId },
-        include: {
-          product: {
-            include: {
-              productTranslations: {
-                where: { language: { in: [headerLang, defaultLang] } },
-                select: { language: true, name: true },
-              },
-            },
-          },
-        },
-        orderBy: { order: 'asc' },
-      });
-
-      return links.map((link) => {
-        const name = pickTranslation(link.product?.productTranslations ?? [], 'name', headerLang, defaultLang)
-        const categoryName = ''
-        const price = link.product?.productPrice ?? 0;
-
-        return {
-          productId: link.productId,
-          eventPrice: link.eventPrice,
-          eventDiscountPercent: link.eventDiscountPercent,
-          order: link.order,
-          name,
-          categoryName,
-          productPrice: price,
-        };
-      });
-    } catch (error) {
-      if (error instanceof CustomException) throw error;
-      throw new CustomException('common.errorMessage', 'INTERNAL_SERVER_ERROR');
-    }
-  }
-
-  async setCategoryProducts(categoryId: number, dto: SetCategoryProductsReqDto): Promise<string> {
-    try {
-      const category = await this.prisma.productCategory.findUnique({ where: { id: categoryId } });
-      if (!category) {
-        throw new CustomException('product.category.not_found', 'BAD_REQUEST', { field: 'categoryId', fieldMessage: 'product.category.not_found' });
-      }
-
-      const productIds = dto.products.map((p) => p.productId);
-      const products = await this.prisma.product.findMany({
-        where: { id: { in: productIds }, deletedAt: null },
-        select: { id: true },
-      });
-
-      if (products.length !== productIds.length) {
-        throw new CustomException('product.not_found', 'BAD_REQUEST', { field: 'productId', fieldMessage: 'product.not_found' });
-      }
-
-      const existing = await this.prisma.productToProductCategory.findMany({
-        where: { productCategoryId: categoryId, productId: { in: productIds } },
-        select: { productId: true },
-      });
-
-      if (existing.length > 0) {
-        throw new CustomException('product.category.product.duplicate', 'BAD_REQUEST');
-      }
-
-      const baseOrder = await this.orderHelper.getNextOrder('productToProductCategory', { productCategoryId: categoryId });
-
-      await this.prisma.$transaction(async (tx) => {
-        for (const [index, p] of dto.products.entries()) {
-          await tx.productToProductCategory.create({
-            data: {
-              productId: p.productId,
-              productCategoryId: categoryId,
-              eventPrice: p.eventPrice,
-              eventDiscountPercent: 0,
-              order: baseOrder + index,
-              isActive: true
-            },
-          });
-        }
-      });
-
-      return 'set category products success';
-    } catch (error) {
-      if (error instanceof CustomException) throw error;
-      throw new CustomException('common.errorMessage', 'INTERNAL_SERVER_ERROR');
-    }
-  }
-
-  async putCategoryProduct(categoryId: number, dto: PutCategoryProductReqDto): Promise<string> {
-    try {
-      const category = await this.prisma.productCategory.findUnique({ where: { id: categoryId } });
-      if (!category) {
-        throw new CustomException('product.category.not_found', 'BAD_REQUEST');
-      }
-
-      const originProducts = await this.prisma.productToProductCategory.findMany({
-        where: { productCategoryId: categoryId },
-        select: { productId: true, eventPrice: true, eventDiscountPercent: true, order: true },
-      });
-
-      const linkedProductIds = originProducts.map((op) => op.productId);
-      const notLinked = dto.products.filter((p) => !linkedProductIds.includes(p.productId));
-      if (notLinked.length > 0) throw new CustomException('product.category.product.not_found', 'BAD_REQUEST');
-
-      await this.prisma.$transaction(async (tx) => {
-        for (const p of dto.products) {
-          await tx.productToProductCategory.update({
-            where: { productId_productCategoryId: { productId: p.productId, productCategoryId: categoryId } },
-            data: { eventPrice: p.eventPrice, eventDiscountPercent: p.eventDiscountPercent, order: p.order }
-          });
-        }
-      });
-
-      return 'update category product success';
-    } catch (error) {
-      if (error instanceof CustomException) throw error;
-      throw new CustomException('common.errorMessage', 'INTERNAL_SERVER_ERROR');
-    }
-  }
-
-  async deleteCategoryProduct(categoryId: number, dto: DeleteCategoryProductsReqDto): Promise<string> {
-    try {
-      const links = await this.prisma.productToProductCategory.findMany({
-        where: { productCategoryId: categoryId, productId: { in: dto.productIds } },
-        select: { productId: true, order: true },
-        orderBy: { order: 'asc' },
-      });
-
-      if (links.length !== dto.productIds.length) {
-        throw new CustomException('product.category.product.not_found', 'BAD_REQUEST');
-      }
-
-      await this.prisma.$transaction(async (tx) => {
-        await tx.productToProductCategory.deleteMany({
-          where: { productCategoryId: categoryId, productId: { in: dto.productIds } },
-        });
-
-        const remaining = await tx.productToProductCategory.findMany({
-          where: { productCategoryId: categoryId },
-          orderBy: { order: 'asc' },
-          select: { productId: true },
-        });
-
-        for (const [index, item] of remaining.entries()) {
-          await tx.productToProductCategory.update({
-            where: { productId_productCategoryId: { productId: item.productId, productCategoryId: categoryId } },
-            data: { order: index + 1 },
-          });
-        }
-      });
-
-      return 'delete category product success';
-    } catch (error) {
-      if (error instanceof CustomException) throw error;
-      throw new CustomException('common.errorMessage', 'INTERNAL_SERVER_ERROR');
-    }
-  }
 }

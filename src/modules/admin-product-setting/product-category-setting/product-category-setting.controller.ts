@@ -8,17 +8,13 @@ import { LanguageReqDto, UpdateToggleReqDto } from '@common/dto/common-patch.dto
 import { SettingService } from '@src/core/setting/setting.service';
 import { GetProductCategoryListReqDto } from './dto/get-product-category/query.dto';
 import { GetProductCategoryDetailResDto, GetProductCategoryListResDto, GetProductCategoryTranslationResDto } from './dto/get-product-category/response.dto';
-import { GetCategoryProductResDto } from './dto/get-product-category-products/response.dto';
 import { SetProductCategoryReqDto } from './dto/set-product-category/request.dto';
 import { PutProductCategoryReqDto, PutProductCategoryPublicTranslationReqDto, PutProductCategoryTranslationReqDto } from './dto/put-product-category/request.dto';
 import { PatchProductCategoryOrderReqDto } from './dto/patch-product-category/request.dto';
-import { SetCategoryProductsReqDto } from './dto/set-product-category-products/request.dto';
-import { PutCategoryProductReqDto } from './dto/put-product-category-products/request.dto';
-import { DeleteCategoryProductsReqDto } from './dto/delete-product-category-products/request.dto';
 import { Public } from '@common/decorators/public.decorator';
 
 @Public()
-@ApiExtraModels(GetProductCategoryListResDto, GetProductCategoryDetailResDto, GetProductCategoryTranslationResDto, CommonSetResponseDto, GetCategoryProductResDto)
+@ApiExtraModels(GetProductCategoryListResDto, GetProductCategoryDetailResDto, GetProductCategoryTranslationResDto, CommonSetResponseDto)
 @ApiTags('H 시술|상품 설정 > 상품 설정 - 카테고리')
 @Controller('/api/v1/product-category')
 export class ProductCategorySettingController {
@@ -39,8 +35,8 @@ export class ProductCategorySettingController {
   @Get('/:id')
   @ApiOperation({ summary: '카테고리 상세 조회' })
   @ApiCommonResponse(GetProductCategoryDetailResDto, { isArray: false, status: 200 })
-  async getProductCategoryDetail(@Param('id') id: number): Promise<GetProductCategoryDetailResDto> {
-    return this.productCategorySettingService.getProductCategoryDetail(id);
+  async getProductCategoryDetail(@Param('id') id: number, @Headers('lang') headerLang: string): Promise<GetProductCategoryDetailResDto> {
+    return this.productCategorySettingService.getProductCategoryDetail(id, headerLang as Language);
   }
 
   @Get('/:id/translation')
@@ -99,33 +95,4 @@ export class ProductCategorySettingController {
     return this.productCategorySettingService.patchProductCategoryOrder(dto);
   }
 
-  // ────────── 카테고리 상품 ──────────
-
-  @Get('/:id/products')
-  @ApiOperation({ summary: '카테고리 상품 목록 조회' })
-  @ApiCommonResponse(GetCategoryProductResDto, { isArray: true, status: 200 })
-  async getCategoryProductList(@Param('id') id: number, @Headers('lang') headerLang: string,): Promise<any[]> {
-    return this.productCategorySettingService.getCategoryProductList(id, headerLang as Language);
-  }
-
-  @Post('/:id/products')
-  @ApiOperation({ summary: '카테고리 상품 추가' })
-  @ApiCommonResponse(String, { isArray: false, status: 200, example: 'set category products success' })
-  async setCategoryProducts(@Param('id') id: number, @Body() dto: SetCategoryProductsReqDto): Promise<string> {
-    return this.productCategorySettingService.setCategoryProducts(id, dto);
-  }
-
-  @Put('/:id/products')
-  @ApiOperation({ summary: '카테고리 상품 일괄 수정 (가격/할인율/순서)' })
-  @ApiCommonResponse(String, { isArray: false, status: 200, example: 'update category product success' })
-  async putCategoryProduct(@Param('id') id: number, @Body() dto: PutCategoryProductReqDto): Promise<string> {
-    return this.productCategorySettingService.putCategoryProduct(id, dto);
-  }
-
-  @Delete('/:id/products')
-  @ApiOperation({ summary: '카테고리 상품 삭제 (복수)' })
-  @ApiCommonResponse(String, { isArray: false, status: 200, example: 'delete category product success' })
-  async deleteCategoryProduct(@Param('id') id: number, @Body() dto: DeleteCategoryProductsReqDto): Promise<string> {
-    return this.productCategorySettingService.deleteCategoryProduct(id, dto);
-  }
 }

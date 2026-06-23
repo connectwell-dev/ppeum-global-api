@@ -40,7 +40,11 @@ export class ProductUploadService {
     const langs = this.getAllLanguages();
     const defaultLang = this.settingService.getDefaultLanguage() as Language;
     const wb = new ExcelJS.Workbook();
-    await wb.xlsx.load(buffer as any);
+    try {
+      await wb.xlsx.load(buffer as any);
+    } catch {
+      throw new CustomException('올바른 xlsx 형식이 아닙니다. Numbers에서 저장 시 "파일 > 내보내기 > Excel"을 사용해주세요.', 'BAD_REQUEST');
+    }
 
     const ws = wb.getWorksheet('상품 업로드') || wb.getWorksheet(1);
     if (!ws) throw new CustomException('엑셀 파일에 "상품 업로드" 시트가 없습니다.', 'BAD_REQUEST');
@@ -78,6 +82,10 @@ export class ProductUploadService {
     });
     for (const info of detailInfos) detailInfoMap.set(info.code, info.id);
 
+    const groupMap = new Map<string, number>();
+    const groups = await this.prisma.productGroup.findMany({ select: { id: true, code: true } });
+    for (const g of groups) groupMap.set(g.code, g.id);
+
     // ── 1단계: 파싱 + 검증 ──
     const parsed: { rowNum: number; data: ParsedProduct }[] = [];
     const errors: { row: number; message: string }[] = [];
@@ -97,6 +105,9 @@ export class ProductUploadService {
       const eventPriceRaw = this.cellVal(row, eventPriceCol);
       const eventPrice = eventPriceRaw ? Number(eventPriceRaw) : null;
       if (eventPriceRaw && isNaN(eventPrice as number)) rowErrors.push('이벤트가는 숫자여야 합니다.');
+
+      const groupCode = this.cellVal(row, groupCodeCol) || null;
+      if (groupCode && !groupMap.has(groupCode)) rowErrors.push(`분류코드 "${groupCode}"가 존재하지 않습니다.`);
 
       const opCode = this.cellVal(row, opCodeCol) || null;
       if (opCode && !detailInfoMap.has(opCode)) rowErrors.push(`상세페이지코드 "${opCode}"가 존재하지 않습니다.`);
@@ -138,12 +149,11 @@ export class ProductUploadService {
       throw new CustomException('등록할 상품 데이터가 없습니다.', 'BAD_REQUEST');
     }
 
-    // 이미지코드 유효성 검증
+    // 이미지코드 유효성 검증 (공통 1개 컬럼)
     const allImageCodes = new Set<string>();
     for (const item of parsed) {
-      for (const t of item.data.translations) {
-        if (t.imageCode) allImageCodes.add(t.imageCode);
-      }
+      const code = item.data.translations[0]?.imageCode;
+      if (code) allImageCodes.add(code);
     }
     const validImageCodes = new Set<string>();
     if (allImageCodes.size > 0) {
@@ -154,14 +164,9 @@ export class ProductUploadService {
       for (const img of images) validImageCodes.add(img.code);
     }
     for (const item of parsed) {
-      const invalidCodes: string[] = [];
-      for (const t of item.data.translations) {
-        if (t.imageCode && !validImageCodes.has(t.imageCode)) {
-          invalidCodes.push(t.imageCode);
-        }
-      }
-      if (invalidCodes.length > 0) {
-        errors.push({ row: item.rowNum, message: `존재하지 않는 이미지코드: ${invalidCodes.join(', ')}` });
+      const code = item.data.translations[0]?.imageCode;
+      if (code && !validImageCodes.has(code)) {
+        errors.push({ row: item.rowNum, message: `존재하지 않는 이미지코드: ${code}` });
       }
     }
 
@@ -179,6 +184,11 @@ export class ProductUploadService {
           productDetailInfoId = detailInfoMap.get(item.data.productDetailInfoCode) ?? null;
         }
 
+        let productGroupId: number | null = null;
+        if (item.data.groupCode) {
+          productGroupId = groupMap.get(item.data.groupCode) ?? null;
+        }
+
         const product = await tx.product.create({
           data: {
             productPrice: item.data.price,
@@ -187,6 +197,7 @@ export class ProductUploadService {
             endDate: item.data.endDate,
             isActive: true,
             productDetailInfoId,
+            productGroupId,
             changedKeys: [],
           },
         });

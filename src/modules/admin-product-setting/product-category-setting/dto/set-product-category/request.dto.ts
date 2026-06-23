@@ -29,6 +29,28 @@ export class ProductCategoryTranslationDto {
   @IsString()
   @IsOptional()
   imageCode?: string;
+
+  @ApiProperty({ description: '노출 여부', example: true, required: false, default: true })
+  @IsBoolean()
+  @IsOptional()
+  isView?: boolean;
+}
+
+export class CategoryProductItemDto {
+  @ApiProperty({ description: '상품 ID', example: 1 })
+  @IsNumber()
+  @IsNotEmpty()
+  productId: number;
+
+  @ApiProperty({ description: '프로모션 가격', example: null, nullable: true, required: false })
+  @IsNumber()
+  @IsOptional()
+  promotionPrice?: number | null;
+
+  @ApiProperty({ description: '노출 순서', example: 1, required: false })
+  @IsNumber()
+  @IsOptional()
+  order?: number;
 }
 
 export class SetProductCategoryReqDto {
@@ -74,4 +96,11 @@ export class SetProductCategoryReqDto {
   @ValidateNested({ each: true })
   @Type(() => ProductCategoryTranslationDto)
   categoryTranslations: ProductCategoryTranslationDto[];
+
+  @ApiProperty({ description: '카테고리 상품 목록', type: [CategoryProductItemDto], required: false })
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => CategoryProductItemDto)
+  products?: CategoryProductItemDto[];
 }
