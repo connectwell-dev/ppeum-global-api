@@ -44,7 +44,7 @@ export class BasicPopupSettingService {
             language: true,
             type: true
           },
-          orderBy: { language: 'asc' }
+          orderBy: { id: 'asc' }
         })
       ]);
       return { total, popupBasicCategory };
@@ -70,7 +70,9 @@ export class BasicPopupSettingService {
           images: {
             select: {
               path: true
-            }
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 1
           }
         },
         orderBy: { createdAt: 'desc' }
