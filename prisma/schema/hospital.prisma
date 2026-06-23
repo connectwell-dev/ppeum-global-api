@@ -1,0 +1,25 @@
+model HospitalWeeklyWorkTime {
+  id          Int         @id @default(autoincrement())
+  weekDayType WeekDayType @map("week_day_type") // 요일
+  weeklyTime  Json?       @map("weekly_time") // 요일별 진료 시간대 [{ startTime, endTime }, ...]
+  lunchTime   Json?       @map("lunch_time") // 요일별 점심시간
+  isTreatment Boolean     @default(true) @map("is_treatment") // 진료 여부
+  createdAt   DateTime    @default(now()) @map("created_at") // 생성일시
+  updatedAt   DateTime    @updatedAt @map("updated_at") // 수정일시
+  deletedAt   DateTime?   @map("deleted_at") // 삭제일시
+
+  @@index([weekDayType])
+  @@map("hospital_weekly_work_time")
+}
+
+model HospitalDateClosedTime {
+  id         Int       @id @default(autoincrement())
+  date       String    @map("date") @db.VarChar(20) // 날짜
+  closedTime Json?     @map("closed_time") // 휴진 시간
+  createdAt  DateTime  @default(now()) @map("created_at") // 생성일시
+  updatedAt  DateTime  @updatedAt @map("updated_at") // 수정일시
+  deletedAt  DateTime? @map("deleted_at") // 삭제일시
+
+  @@index([date])
+  @@map("hospital_date_closed_time")
+}

@@ -39,7 +39,7 @@ export class AdminPolicySettingService {
             language: true,
             type: true
           },
-          orderBy: { language: 'asc' }
+          orderBy: { id: 'asc' }
         }),
       ]);
       return { total, policyCategory };
