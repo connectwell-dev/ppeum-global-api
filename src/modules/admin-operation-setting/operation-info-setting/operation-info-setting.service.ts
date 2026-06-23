@@ -89,7 +89,7 @@ export class OperationInfoSettingService {
       const result: { [lang: string]: any } = {};
       for (const translation of info.operationInfoTranslations) {
         const { operationInfoId, language, image, ...translationData } = translation as any;
-        result[language] = { ...translationData, id: info.id, changedKeys: info.changedKeys, createdAt: info.createdAt, updatedAt: info.updatedAt, image: image };
+        result[language] = { ...translationData, id: info.id, code: info.code, changedKeys: info.changedKeys, createdAt: info.createdAt, updatedAt: info.updatedAt, image: image };
       }
       return result;
     } catch (error) {
@@ -158,6 +158,7 @@ export class OperationInfoSettingService {
         const defaultLang = this.settingService.getDefaultLanguage() as Language;
         return {
           id: item.id,
+          code: item.code,
           title: pickTranslation(item.operationInfoTranslations ?? [], 'title', headerLang, defaultLang) ?? '',
           hashtag: pickTranslation(item.operationInfoTranslations ?? [], 'hashtag', headerLang, defaultLang) ?? [],
           note: pickTranslation(item.operationInfoTranslations ?? [], 'note', headerLang, defaultLang) ?? '',

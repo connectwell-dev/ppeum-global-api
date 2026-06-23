@@ -1,12 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Language } from '@prisma/client';
 
-
-export class ImageResDto {
-  @ApiProperty({ example: 'IMG_Fairy_Ear_Filler' })
+export class ProductImageResDto {
+  @ApiProperty({ example: 'IMG00000001' })
   code: string;
 
-  @ApiProperty({ example: 'Fairy Ear Filler' })
+  @ApiProperty({ example: '상품 이미지' })
   name: string;
 
   @ApiProperty({ example: 'uuid.jpg' })
@@ -35,6 +34,12 @@ export class GetProductDetailResDto {
   @ApiProperty({ example: 100000, description: '상품 금액' })
   productPrice: number;
 
+  @ApiProperty({ example: 80000, description: '이벤트가', nullable: true })
+  eventPrice: number | null;
+
+  @ApiProperty({ description: '이미지 정보 (기준언어)', type: ProductImageResDto, nullable: true })
+  image: ProductImageResDto | null;
+
   @ApiProperty({ example: '2026-01-01', description: '노출 시작일', nullable: true })
   startDate: string | null;
 
@@ -52,9 +57,6 @@ export class GetProductDetailResDto {
 
   @ApiProperty({ example: '리프팅 시술 설명', description: '연결 시술설명 타이틀 (요청 언어)', nullable: true })
   operationInfoTitle: string | null;
-
-  @ApiProperty({ description: '이미지 목록', type: ImageResDto })
-  image: ImageResDto | null;
 
   @ApiProperty({ example: '2026-01-01', description: '생성일시' })
   createdAt: Date;
@@ -84,11 +86,11 @@ export class GetProductTranslationResDto {
   @ApiProperty({ example: '상품 설명 (원문)', description: 'origin 상품 설명', nullable: true })
   originDescription: string | null;
 
-  @ApiProperty({ description: '이미지 정보', type: ImageResDto })
-  image: ImageResDto | null;
+  @ApiProperty({ description: '번역 이미지 정보 (없으면 기준언어)', type: ProductImageResDto, nullable: true })
+  image: ProductImageResDto | null;
 
-  @ApiProperty({ example: 'IMG001', description: 'origin 이미지 ID', required: false })
-  originImage: ImageResDto | null;
+  @ApiProperty({ description: 'origin 이미지 정보', type: ProductImageResDto, nullable: true })
+  originImage: ProductImageResDto | null;
 
   @ApiProperty({ example: true, description: '해당 언어권 노출 여부' })
   isView: boolean;
@@ -112,6 +114,9 @@ export class GetProductListResDto {
 
   @ApiProperty({ example: 100000, description: '상품 금액' })
   productPrice: number;
+
+  @ApiProperty({ example: 80000, description: '이벤트가', nullable: true })
+  eventPrice: number | null;
 
   @ApiProperty({ example: '2026-01-01', description: '노출 시작일', nullable: true })
   startDate: string | null;

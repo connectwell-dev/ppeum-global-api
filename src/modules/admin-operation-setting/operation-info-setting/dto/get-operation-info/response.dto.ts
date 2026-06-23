@@ -33,6 +33,9 @@ export class GetOperationInfoListResDto {
   @ApiProperty({ example: 1 })
   id: number;
 
+  @ApiProperty({ example: 'INFO00001', description: '시술설명 코드' })
+  code: string;
+
   @ApiProperty({ example: '립 필러', nullable: true })
   title: string | null;
 
@@ -56,6 +59,9 @@ export class GetOperationInfoListResDto {
 export class GetOperationInfoDetailResDto {
   @ApiProperty({ example: 1 })
   id: number;
+
+  @ApiProperty({ example: 'INFO00001', description: '시술설명 코드' })
+  code: string;
 
   @ApiProperty({ example: '립 필러', nullable: true })
   title: string | null;
