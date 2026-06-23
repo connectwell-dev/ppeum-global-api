@@ -6,34 +6,39 @@ enum ProductCategoryType {
 // 상품 그룹 (엑셀 업로드 등에서 사용하는 분류 코드, 노출 카테고리와는 별개 개념)
 model ProductGroup {
   id        Int      @id @default(autoincrement())
-  code      String   @unique @map("code") @db.VarChar(100) // 분류코드
-  name      String   @map("name") @db.VarChar(512) // 분류명
-  createdAt DateTime @default(now()) @map("created_at") // 생성일시
-  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") // 수정일시
+  code      String   @unique @map("code") @db.VarChar(100)
+  name      String   @map("name") @db.VarChar(512)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  products Product[]
 
   @@map("product_group")
 }
 
 model Product {
   id                 Int       @id @default(autoincrement())
-  code               String    @unique @default(dbgenerated("generate_custom_id('PRD')")) @map("code") // 고유 id
-  isActive           Boolean   @default(true) @map("is_active") // 사용여부
-  productPrice       Int       @map("product_price") // 상품 가격
-  eventPrice         Int?      @map("event_price") // 이벤트가 (null이면 없음)
-  startDate          String?   @map("start_date") @db.VarChar(20) // 노출 시작일
-  endDate            String?   @map("end_date") @db.VarChar(20) // 노출 종료일 (null이면 상시)
-  productDetailInfoId Int?     @map("product_detail_info_id") // 상세페이지 id
+  code               String    @unique @default(dbgenerated("generate_custom_id('PRD')")) @map("code")
+  isActive           Boolean   @default(true) @map("is_active")
+  productPrice       Int       @map("product_price")
+  eventPrice         Int?      @map("event_price")
+  startDate          String?   @map("start_date") @db.VarChar(20)
+  endDate            String?   @map("end_date") @db.VarChar(20)
+  productDetailInfoId Int?     @map("product_detail_info_id")
+  productGroupId     Int?      @map("product_group_id")
   changedKeys        Json[]    @default([]) @map("changed_keys")
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @default(now()) @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
-  productTranslations      ProductTranslation[]
-  productDetailInfo        ProductDetailInfo?        @relation(fields: [productDetailInfoId], references: [id], onDelete: SetNull)
+  productTranslations        ProductTranslation[]
+  productDetailInfo          ProductDetailInfo?        @relation(fields: [productDetailInfoId], references: [id], onDelete: SetNull)
+  productGroup               ProductGroup?             @relation(fields: [productGroupId], references: [id], onDelete: SetNull)
   productToProductCategories ProductToProductCategory[]
 
   @@index([productDetailInfoId])
+  @@index([productGroupId])
   @@map("product")
 }
 
@@ -86,6 +91,7 @@ model ProductCategoryTranslation {
   language          Language
   name              String?   @db.VarChar(512)
   imageCode         String?   @map("image_code")
+  isView            Boolean   @default(true) @map("is_view")
   isMatch           Boolean   @default(false) @map("is_match")
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at")
@@ -102,7 +108,7 @@ model ProductCategoryTranslation {
 model ProductToProductCategory {
   productId            Int     @map("product_id")
   productCategoryId    Int     @map("product_category_id")
-  eventPrice           Int     @default(0) @map("event_price")
+  promotionPrice       Int?    @map("promotion_price")
   eventDiscountPercent Float   @default(0) @map("event_discount_percent")
   order                Int     @default(0) @map("order")
   isActive             Boolean @default(true) @map("is_active")

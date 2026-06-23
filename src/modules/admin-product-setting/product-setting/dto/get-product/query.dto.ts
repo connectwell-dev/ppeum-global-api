@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { PaginationReqDto } from '@common/dto/pagination.dto';
 import { Language } from '@prisma/client';
@@ -25,4 +25,10 @@ export class GetProductListReqDto extends PaginationReqDto {
   @IsOptional()
   @IsString()
   code?: string;
+
+  @ApiProperty({ description: '상품 그룹 ID', example: 1, required: false })
+  @IsOptional()
+  @Transform(({ value }) => value ? Number(value) : undefined)
+  @IsNumber()
+  productGroupId?: number;
 }

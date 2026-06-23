@@ -1,6 +1,29 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Language, ProductCategoryType, WeekDayType } from '@prisma/client';
 
+export class CategoryProductResDto {
+  @ApiProperty({ description: '상품 ID', example: 1 })
+  productId: number;
+
+  @ApiProperty({ description: '상품명', example: '상품명' })
+  name: string;
+
+  @ApiProperty({ description: '상품 가격', example: 100000 })
+  productPrice: number;
+
+  @ApiProperty({ description: '이벤트가', example: 80000, nullable: true })
+  eventPrice: number | null;
+
+  @ApiProperty({ description: '프로모션 가격', example: null, nullable: true })
+  promotionPrice: number | null;
+
+  @ApiProperty({ description: '이벤트 할인율 (%)', example: 10.5 })
+  eventDiscountPercent: number;
+
+  @ApiProperty({ description: '노출 순서', example: 1 })
+  order: number;
+}
+
 export class CategoryImageResDto {
   @ApiProperty({ example: 'IMG_xxxxxxxx' })
   code: string;
@@ -44,6 +67,9 @@ export class GetProductCategoryTranslationResDto {
   @ApiProperty({ description: '번역 이미지 정보', type: CategoryImageResDto, nullable: true })
   image: CategoryImageResDto | null;
 
+  @ApiProperty({ example: true, description: '노출 여부' })
+  isView: boolean;
+
   @ApiProperty({ example: '카테고리명 (원문)', description: 'origin 카테고리명' })
   originName: string;
 
@@ -52,6 +78,9 @@ export class GetProductCategoryTranslationResDto {
 
   @ApiProperty({ type: [GetProductCategoryTranslationNotMatchKeyResDto], description: '불일치 필드 목록' })
   notMatchKeys: GetProductCategoryTranslationNotMatchKeyResDto[];
+
+  @ApiProperty({ type: [CategoryProductResDto], description: '카테고리 상품 목록' })
+  products: CategoryProductResDto[];
 }
 
 export class GetProductCategoryListResDto {
@@ -133,4 +162,7 @@ export class GetProductCategoryDetailResDto {
 
   @ApiProperty({ example: '2026-01-01', description: '수정일시' })
   updatedAt: Date;
+
+  @ApiProperty({ type: [CategoryProductResDto], description: '카테고리 상품 목록' })
+  products: CategoryProductResDto[];
 }

@@ -1,10 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsArray, IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength, ValidateNested } from 'class-validator';
 import { OmitType } from '@nestjs/swagger';
 import { Language } from '@prisma/client';
-import { SetProductCategoryReqDto } from '../set-product-category/request.dto';
+import { Type } from 'class-transformer';
+import { SetProductCategoryReqDto, CategoryProductItemDto } from '../set-product-category/request.dto';
 
-export class PutProductCategoryReqDto extends OmitType(SetProductCategoryReqDto, ['categoryTranslations'] as const) {
+export class PutProductCategoryReqDto extends OmitType(SetProductCategoryReqDto, ['categoryTranslations', 'products'] as const) {
   @ApiProperty({ description: '카테고리명 (기준언어)', example: '카테고리명' })
   @IsString()
   @IsNotEmpty()
@@ -20,6 +21,13 @@ export class PutProductCategoryReqDto extends OmitType(SetProductCategoryReqDto,
   @IsBoolean()
   @IsNotEmpty()
   isSimpleChange: boolean;
+
+  @ApiProperty({ description: '카테고리 상품 목록 (전체 교체)', type: [CategoryProductItemDto], required: false })
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => CategoryProductItemDto)
+  products?: CategoryProductItemDto[];
 }
 
 export class PutProductCategoryTranslationReqDto {
@@ -38,6 +46,11 @@ export class PutProductCategoryTranslationReqDto {
   @IsString()
   @IsOptional()
   imageCode?: string;
+
+  @ApiProperty({ description: '노출 여부', example: true, required: false })
+  @IsBoolean()
+  @IsOptional()
+  isView?: boolean;
 }
 
 export class PutProductCategoryPublicTranslationReqDto extends PutProductCategoryTranslationReqDto {

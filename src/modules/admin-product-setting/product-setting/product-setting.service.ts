@@ -59,6 +59,7 @@ export class ProductSettingService {
         deletedAt: null,
         ...(isActive !== undefined && { isActive }),
         ...(code && { id: { contains: code } }),
+        ...(dto.productGroupId && { productGroupId: dto.productGroupId }),
         ...notInputFilter,
       };
 
