@@ -64,6 +64,7 @@ model PopupMain {
   startTime           String    @map("start_time") // 시작시간
   endAt               String    @map("end_at") // 종료일
   endTime             String    @map("end_time") // 종료시간
+  order               Int       @default(1) @map("order")
   createdAt           DateTime  @default(now()) @map("created_at") // 생성일시
   updatedAt           DateTime  @default(now()) @updatedAt @map("updated_at") // 수정일시
   deletedAt           DateTime? @map("deleted_at") // 삭제일시
@@ -76,7 +77,6 @@ model PopupMain {
 model PopupMainImage {
   id          Int       @id @default(autoincrement())
   popupMainId Int       @map("popup_main_id")
-  order       Int       @default(1) @map("order")
   path        String    @db.VarChar(255) // 이미지 path
   createdAt   DateTime  @default(now()) @map("created_at") // 생성일시
   updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") // 수정일시
