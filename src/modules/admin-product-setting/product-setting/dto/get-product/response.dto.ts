@@ -46,6 +46,9 @@ export class GetProductDetailResDto {
   @ApiProperty({ example: true, description: '기준언어 노출 여부' })
   isView: boolean;
 
+  @ApiProperty({ example: 1, description: '상품 그룹 ID', nullable: true })
+  productGroupId: number | null;
+
   @ApiProperty({ example: 1, description: '연결 상세페이지 ID', nullable: true })
   productDetailInfoId: number | null;
 
@@ -120,6 +123,9 @@ export class GetProductListResDto {
 
   @ApiProperty({ example: true, description: '사용 여부' })
   isActive: boolean;
+
+  @ApiProperty({ example: 1, description: '상품 그룹 ID', nullable: true })
+  productGroupId: number | null;
 
   @ApiProperty({ example: '2026-01-01', description: '생성일시' })
   createdAt: Date;

@@ -131,6 +131,7 @@ export class ProductSettingService {
           endDate: item.endDate ?? null,
           notInputLanguages,
           isActive: item.isActive,
+          productGroupId: item.productGroupId ?? null,
           createdAt: item.createdAt,
           updatedAt: item.updatedAt,
         };
@@ -181,6 +182,7 @@ export class ProductSettingService {
         endDate: product.endDate ?? null,
         isActive: product.isActive,
         isView: defaultTranslation?.isView ?? true,
+        productGroupId: product.productGroupId ?? null,
         productDetailInfoId: product.productDetailInfoId ?? null,
         productDetailInfoTitle,
         createdAt: product.createdAt,

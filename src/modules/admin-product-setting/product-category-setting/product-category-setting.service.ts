@@ -305,7 +305,7 @@ export class ProductCategorySettingService {
       const defaultData = dto.categoryTranslations?.find((t) => t.language === defaultLang);
       if (!defaultData?.name) throw new CustomException('product.category.name.required', 'BAD_REQUEST', { field: `name.${defaultLang}`, fieldMessage: 'product.category.name.required' });
       const category = await this.prisma.$transaction(async (tx) => {
-        const nextOrder = await this.orderHelper.getNextOrder('productCategory', { deletedAt: null }, tx);
+        const nextOrder = await this.orderHelper.getNextOrder('productCategory', { deletedAt: null, categoryType: dto.categoryType }, tx);
         const created = await tx.productCategory.create({
           data: {
             categoryType: dto.categoryType,
@@ -669,6 +669,17 @@ export class ProductCategorySettingService {
 
   async patchProductCategoryOrder(dto: PatchProductCategoryOrderReqDto): Promise<string> {
     try {
+      const ids = dto.items.map((i) => i.id);
+      const categories = await this.prisma.productCategory.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, categoryType: true },
+      });
+
+      const mismatch = categories.filter((c) => c.categoryType !== dto.categoryType);
+      if (mismatch.length > 0) {
+        throw new CustomException('common.invalid_request', 'BAD_REQUEST', { messageDetail: `전달된 카테고리 중 ${dto.categoryType} 타입이 아닌 항목이 있습니다.` });
+      }
+
       await this.prisma.$transaction(async (tx) => {
         for (const item of dto.items) {
           await tx.productCategory.update({ where: { id: item.id }, data: { order: item.order } });

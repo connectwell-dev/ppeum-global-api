@@ -14,7 +14,6 @@ import { AdminProductSettingModule } from './modules/admin-product-setting/admin
 import { AdminProductDetailSettingModule } from './modules/admin-product-detail-setting/admin-product-detail-setting.module';
 import { AdminPolicySettingModule } from './modules/admin-policy-setting/admin-policy-setting.module';
 import { AdminPopupSettingModule } from './modules/admin-popup-setting/admin-popup-setting.module';
-import { AdminHospitalReservationSettingModule } from './modules/admin-hospital-reservation-setting/admin-hospital-reservation-setting.module';
 
 const nodeEnv = process.env.NODE_ENV || 'development';
 const envFilePath = `.env.${nodeEnv}`;
@@ -36,8 +35,7 @@ const envFilePath = `.env.${nodeEnv}`;
     AdminProductSettingModule,
     AdminProductDetailSettingModule,
     AdminPolicySettingModule,
-    AdminPopupSettingModule,
-    AdminHospitalReservationSettingModule
+    AdminPopupSettingModule
   ],
   providers: [
     { provide: APP_FILTER, useClass: GlobalExceptionFilter },
